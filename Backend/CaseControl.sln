@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.6.33829.357
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CaseControl.Api", "CaseControl\CaseControl.Api.csproj", "{A7BBB3EA-6634-491D-9BA0-7E731AB56D72}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CaseControl.Domain", "CaseControl.Domain\CaseControl.Domain.csproj", "{DD4292DD-0303-45C7-9C6D-4C3BF9C71ECE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A7BBB3EA-6634-491D-9BA0-7E731AB56D72}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A7BBB3EA-6634-491D-9BA0-7E731AB56D72}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A7BBB3EA-6634-491D-9BA0-7E731AB56D72}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A7BBB3EA-6634-491D-9BA0-7E731AB56D72}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DD4292DD-0303-45C7-9C6D-4C3BF9C71ECE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DD4292DD-0303-45C7-9C6D-4C3BF9C71ECE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DD4292DD-0303-45C7-9C6D-4C3BF9C71ECE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DD4292DD-0303-45C7-9C6D-4C3BF9C71ECE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6993F2BA-6713-4141-8850-9E8A75C0F4EC}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,17 @@
+{
+    "HHRR": {
+        "case_manager": "Case manager",
+        "case_manager_registration": "Case manager registration",
+        "case_manager_update": "Case manager update",
+        "case_managers": "Case managers",
+        "hired_date": "Hired date",
+        "provider_number": "Provider number",
+        "pay_rate": "Pay rate",
+        "pay_units": "Pay units",
+        "zip_code": "Zip code",
+        "employee_information": "Employee information",
+
+        "must_specify_city": "Must specify city",
+        "must_specify_hired_date": "Must specify hired date"
+    }
+}

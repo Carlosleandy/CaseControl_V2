@@ -1,0 +1,168 @@
+[
+    {
+        "name": "MENU.dashboard",
+        "path": "/#/",
+        "icon": "pi-microsoft",
+        "privileges": [],
+        "children": []
+    },
+
+    {
+        "name": "MENU.cases",
+        "path": "",
+        "icon": "pi-shield",
+        "privileges": [],
+        "children": [
+            {
+                "name": "MENU.caseinvestigations",
+                "path": "/casecontrol/#/caseinvestigation",
+                "icon": "pi-th-large",
+                "privileges": []
+            }
+        ]
+    },
+
+    {
+        "name": "MENU.reports",
+        "path": "",
+        "icon": "pi-shield",
+        "privileges": [],
+        "children": [
+            {
+                "name": "MENU.casesbystatussummary",
+                "path": "/casecontrol/#/casesbystatussummary",
+                "icon": "pi-list",
+                "privileges": []
+            },
+            {
+                "name": "MENU.casesbyrecommendationtypesummary",
+                "path": "/casecontrol/#/casesbyrecommendationtypesummary",
+                "icon": "pi-list",
+                "privileges": []
+            },
+            {
+                "name": "MENU.casesbyusernamesummary",
+                "path": "/casecontrol/#/casesbyusernamesummary",
+                "icon": "pi-list",
+                "privileges": []
+            },
+            {
+                "name": "MENU.casesrecoverysummary",
+                "path": "/casecontrol/#/casesrecoverysummary",
+                "icon": "pi-list",
+                "privileges": []
+            },            
+            {
+                "name": "MENU.casesbylinked",
+                "path": "/casecontrol/#/casesbylinked",
+                "icon": "pi-list",
+                "privileges": []
+            },
+            {
+                "name": "MENU.faultsbylinked",
+                "path": "/casecontrol/#/faultsbylinked",
+                "icon": "pi-list",
+                "privileges": []
+            },
+            {
+                "name": "MENU.rankingcasesbyuser",
+                "path": "/casecontrol/#/rankingcasesbyuser",
+                "icon": "pi-list",
+                "privileges": []
+            }             
+        ]
+    },
+       
+    {
+        "name": "MENU.maintenance",
+        "path": "",
+        "icon": "pi-shield",
+        "privileges": [],
+        "children": [
+            {
+                "name": "MENU.caseTypes",
+                "path": "/casecontrol/#/caseType",
+                "icon": "pi-sliders-h",
+                "privileges": []
+            },
+            {
+                "name": "MENU.caseStatuses",
+                "path": "/casecontrol/#/caseStatus",
+                "icon": "pi-compass",
+                "privileges": []
+            },
+            {
+                "name": "MENU.recommendationstatuses",
+                "path": "/casecontrol/#/recommendationstatus",
+                "icon": "pi-stop",
+                "privileges": []
+            },
+            {
+                "name": "MENU.recommendationtypes",
+                "path": "/casecontrol/#/recommendationtype",
+                "icon": "pi-ticket",
+                "privileges": []
+            },
+            {
+                "name": "MENU.receptionmediums",
+                "path": "/casecontrol/#/receptionMedium",
+                "icon": "pi-file-word",
+                "privileges": []
+            },
+            {
+                "name": "MENU.faults",
+                "path": "/casecontrol/#/faults",
+                "icon": "pi-file-word",
+                "privileges": []
+            },
+            {
+                "name": "MENU.evidenceClassification",
+                "path": "/casecontrol/#/evidenceclassification",
+                "icon": "pi-file-word",
+                "privileges": []
+            },
+            {
+                "name": "MENU.linkType",
+                "path": "/casecontrol/#/linktype",
+                "icon": "pi-file-word",
+                "privileges": []
+            }
+            
+        ]
+    },
+
+    {
+        "name": "MENU.security",
+        "path": "",
+        "icon": "pi-shield",
+        "privileges": [],
+        "children": [           
+            {
+                "name": "MENU.userLevels",
+                "path": "/casecontrol/#/userLevel",
+                "icon": "pi pi-user-minus",
+                "privileges": []
+            },
+            {
+                "name": "MENU.workinggroups",
+                "path": "/casecontrol/#/workinggroup",
+                "icon": "pi pi-tags",
+                "privileges": []
+            },
+            {
+                "name": "MENU.users",
+                "path": "/casecontrol/#/user",
+                "icon": "pi pi-users",
+                "privileges": []
+            },
+            {
+                "name": "MENU.roles",
+                "path": "/casecontrol/#/role",
+                "icon": "pi pi-circle",
+                "privileges": []
+            }
+            
+        ]
+    }
+
+]

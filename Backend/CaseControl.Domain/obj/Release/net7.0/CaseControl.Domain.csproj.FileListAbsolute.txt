@@ -1,0 +1,12 @@
+F:\PROJECTS\DEVELOP\JNMENDEZ\CASECONTROL\Backend\CaseControl\CaseControl.Domain\bin\Release\net7.0\CaseControl.Domain.deps.json
+F:\PROJECTS\DEVELOP\JNMENDEZ\CASECONTROL\Backend\CaseControl\CaseControl.Domain\bin\Release\net7.0\CaseControl.Domain.dll
+F:\PROJECTS\DEVELOP\JNMENDEZ\CASECONTROL\Backend\CaseControl\CaseControl.Domain\bin\Release\net7.0\CaseControl.Domain.pdb
+F:\PROJECTS\DEVELOP\JNMENDEZ\CASECONTROL\Backend\CaseControl\CaseControl.Domain\obj\Release\net7.0\CaseControl.Domain.csproj.AssemblyReference.cache
+F:\PROJECTS\DEVELOP\JNMENDEZ\CASECONTROL\Backend\CaseControl\CaseControl.Domain\obj\Release\net7.0\CaseControl.Domain.GeneratedMSBuildEditorConfig.editorconfig
+F:\PROJECTS\DEVELOP\JNMENDEZ\CASECONTROL\Backend\CaseControl\CaseControl.Domain\obj\Release\net7.0\CaseControl.Domain.AssemblyInfoInputs.cache
+F:\PROJECTS\DEVELOP\JNMENDEZ\CASECONTROL\Backend\CaseControl\CaseControl.Domain\obj\Release\net7.0\CaseControl.Domain.AssemblyInfo.cs
+F:\PROJECTS\DEVELOP\JNMENDEZ\CASECONTROL\Backend\CaseControl\CaseControl.Domain\obj\Release\net7.0\CaseControl.Domain.csproj.CoreCompileInputs.cache
+F:\PROJECTS\DEVELOP\JNMENDEZ\CASECONTROL\Backend\CaseControl\CaseControl.Domain\obj\Release\net7.0\CaseControl.Domain.dll
+F:\PROJECTS\DEVELOP\JNMENDEZ\CASECONTROL\Backend\CaseControl\CaseControl.Domain\obj\Release\net7.0\refint\CaseControl.Domain.dll
+F:\PROJECTS\DEVELOP\JNMENDEZ\CASECONTROL\Backend\CaseControl\CaseControl.Domain\obj\Release\net7.0\CaseControl.Domain.pdb
+F:\PROJECTS\DEVELOP\JNMENDEZ\CASECONTROL\Backend\CaseControl\CaseControl.Domain\obj\Release\net7.0\ref\CaseControl.Domain.dll

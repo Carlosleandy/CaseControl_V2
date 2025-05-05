@@ -1,0 +1,10 @@
+{
+    "CLIENT": {
+        "title": "Clientes",
+        "date_assigned": "Fecha Asignación",
+        "hmo": "HMO",
+        "runits": "E.Units",
+        "client_registration": "Registro de cliente",
+        "client_update": "Actualización de cliente"
+    }
+}

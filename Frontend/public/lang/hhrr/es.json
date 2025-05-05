@@ -1,0 +1,17 @@
+{
+    "HHRR": {
+        "case_manager": "Gestión de casos",
+        "case_manager_registration": "Registro de gestor de casos",
+        "case_manager_update": "Actualización de gestor de casos",
+        "case_managers": "Gestores de casos",
+        "hired_date": "Fecha de contratación",
+        "provider_number": "Número de proveedor",
+        "pay_rate": "Tarifa de pago",
+        "pay_units": "Unidades de pago",
+        "zip_code": "Zip code",
+        "employee_information": "Información del empleado",
+
+        "must_specify_city": "Debe especificar la ciudad",
+        "must_specify_hired_date": "Debe especificar la fecha de contratación"
+    }
+}

@@ -54,25 +54,23 @@ export const useCaseAssignment = (props: caseassignmentProps) => {
         try {
             validateCaseAssignment(caseassignmentRecord.value);
 
-            let caseassignment = ref({} as CaseAssignment);
+            let savedRecord;
             
             if(caseassignmentRecord.value.id > 0){
-                caseassignment = await props.caseassignmentRepository.edit(caseassignmentRecord.value);
+                savedRecord = await props.caseassignmentRepository.edit(caseassignmentRecord.value);
             }
             else{
-                caseassignment = await props.caseassignmentRepository.add(caseassignmentRecord.value);
+                savedRecord = await props.caseassignmentRepository.add(caseassignmentRecord.value);
             }
             
-            if(!caseassignment) {
-                systemMessage({ "type": 'error', "description": SAVING_RECORD_ERROR });
-            };
-            
+            // Only show success message
             systemMessage({ "type": 'success', "description": SAVING_RECORD_SUCCESS });
             resetPageScroll();
-            return caseassignment;
+            return savedRecord;
         } catch(e) {
             const error = getErrorInformation(e as Error, SAVING_RECORD_ERROR);
             systemMessage({ "type": error.type, "description": error.message });
+            return null;
         }
     }
 

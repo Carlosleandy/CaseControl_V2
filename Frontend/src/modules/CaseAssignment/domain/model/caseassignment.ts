@@ -17,6 +17,9 @@ export type CaseAssignmentFilter = CriteriaFilter & {
     name: string
 }
 
+
+
+
 export const validateCaseAssignment = (caseassignment: CaseAssignment) => {    
     const dataValidation = [
         { validation: !caseassignment.caseID, error: 'Debe especificar el Caso', tag: 'caseID' },

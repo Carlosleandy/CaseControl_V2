@@ -52,12 +52,23 @@ const deleteRow = async (id: number): Promise<void> => {
 export const useDataBinnacle = () => {
     const binnacleSave = async (binnacle: Binnacle): Promise<BinnacleRow> => {
         try {
-            const savedRecord = await add(binnacle);
+            let savedRecord;
+            
+            // Check if we're updating an existing record or creating a new one
+            if (binnacle.id && binnacle.id > 0) {
+                // Update existing record
+                savedRecord = await edit(binnacle);
+            } else {
+                // Create new record
+                savedRecord = await add(binnacle);
+            }
+            
             systemMessage({ "type": 'success', "description": SAVING_RECORD_SUCCESS });
             return savedRecord;      
         } catch (e: any) {
            const error = getErrorInformation(e as Error, SAVING_RECORD_ERROR);
             systemMessage({ "type": error.type, "description": error.message });
+            throw e; // Re-throw the error so the caller can handle it
         }
     }
 
@@ -78,3 +89,6 @@ export default {
     edit,
     deleteRow
 } as BinnacleRepository
+
+
+

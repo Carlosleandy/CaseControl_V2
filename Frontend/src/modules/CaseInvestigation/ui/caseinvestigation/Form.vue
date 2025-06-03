@@ -15,6 +15,7 @@ import LinkedForm from '../../../Linked/ui/linked/Form.vue'
 import InterviewForm from '../../../Interview/ui/interview/Form.vue'
 import EvidenceForm from '../caseinvestigation/FormAddEvidence.vue'
 import FaultLinkedForm from '../../../FaultLinked/ui/faultlinked/Form.vue'
+import BitacoraList from './BitacoraList.vue'
 
 import { useDataCaseStatus } from "../../../CaseStatus/repository/casestatusRepository";
 import { useDataCaseType } from "../../../CaseType/repository/casetypeRepository";
@@ -37,6 +38,10 @@ import { useDataUsers } from "../../../User/repository/userRepository"
 import { ref } from "vue";
 import { Linked } from "../../../Linked/domain/model/linked";
 import { Interview } from "../../../Interview/domain/model/interview";
+import { formatDate } from "../../../shared/utility/dateUtils";
+
+import AsignacionesList from './AsignacionesList.vue'
+import RecuperacionesList from './RecuperacionesList.vue'
 
 
 const formRefAssignment = ref();
@@ -189,9 +194,19 @@ const loadInitialData = async () => {
           caseinvestigation.caseAssignments = [];
         }
         
+        // Asegurarse de que caseAssignments sea un array
+        if (!caseinvestigation.caseAssignments) {
+          caseinvestigation.caseAssignments = [];
+        }
+        
         setCaseInvestigationData(caseinvestigation);
         console.log('Case Investigation Data:', caseinvestigationRecord.value);
         console.log('Assignments:', caseinvestigationRecord.value.caseAssignments);
+        
+        // Forzar la actualización del componente
+        setTimeout(() => {
+          console.log('Verificando asignaciones después del timeout:', caseinvestigationRecord.value.caseAssignments);
+        }, 500);
       }
     } catch (error) {
       console.error('Error al cargar los datos del caso:', error);
@@ -247,6 +262,7 @@ const openFormDialogRecovery = () => {
   recoveryRecord.value.caseID = caseinvestigationRecord.value.id;
   showDialogRecovery.value = true;
 }
+
 
 const downloadEvicence = (evidenceRecord: Evidence | null) => {
   downloadFileEvidenceAsync(evidenceRecord);
@@ -332,25 +348,7 @@ async function deleteRecoveryById(id: number): Promise<void> {
         });
     }
 
-    async function deleteBinnacleById(id: number): Promise<void> {
-        const result = await deleteBinnacle(id);
-        if (result) {
-            loadInitialData(); 
-        }
-    }
-
-    function confirmDeleteBinnacle(event: any, id: number) {
-        confirm.require({
-            target: event.currentTarget,
-            message: '¿Está seguro(a) que desea eliminar este registro?',
-            icon: 'pi pi-question-circle',
-            accept: () => {
-            deleteBinnacleById(id);
-            },
-        });
-    }
-
-    function confirmDeleteAssignment(event: any, id: number) {
+     function confirmDeleteAssignment(event: any, id: number) {
         confirm.require({
             target: event.currentTarget,
             message: '¿Está seguro(a) que desea eliminar este registro?',
@@ -488,10 +486,10 @@ defineExpose({ save: saveCaseInvestigation });
 </script>
 
 <template>
-  <div>
-    <form ref="formRef">
-      <div class="flexbox-grid container">
-        <div class="card" style="--min: 50ch">
+  <div style="width: 100%; max-width: 1800px; margin: 0 auto;">
+    <form ref="formRef" style="width: 100%;">
+      <div class="flexbox-grid container" style="width: 100%;">
+        <div class="card" style="--min: 70ch; width: 100%;">
           <!-- <h2>{{ $t("SHARED.basic_information") }}</h2> -->
 
           <div class="card mb-3" style="background-color: var(--surface-card); padding: 1rem;">
@@ -626,11 +624,14 @@ defineExpose({ save: saveCaseInvestigation });
             </div>
           </div>
           
+
+        
+
+          <!-- RECOMENDACIONES ------------------------------------------------------------- -->
           <div class="card mb-3" style="background-color: var(--surface-card); padding: 1rem;">
 
             <div class="flexbox-grid container">
-  <DataTable :value="caseinvestigationRecord.recommendations" 
-
+              <DataTable :value="caseinvestigationRecord.recommendations" 
                     size="small"
                     scrollable
                     scrollHeight="calc(100vh - 300px)"
@@ -638,8 +639,8 @@ defineExpose({ save: saveCaseInvestigation });
                     tableStyle="min-width: 50rem"                     
                     ref=""                     
                     paginator 
-                    :rows="5"      
-                    :rowsPerPageOptions="[5, 10, 25, 50]"
+                    :rows="10"      
+                    :rowsPerPageOptions="[10, 20, 30, 50]"
                 >
                     <template #header>
                         <div class="flex corn">
@@ -648,9 +649,13 @@ defineExpose({ save: saveCaseInvestigation });
                         </div>
                     </template>
         
-                    <Column field="id" :header="$t('ID')" style="width: 10%"></Column>
+                  
                     <Column field="title" :header="$t('Título')" style="width: 50%"></Column>
-                    <Column field="dateRegistered" :header="$t('Fecha de Registro')" style="width: 10%"></Column>
+                    <Column field="dateRegistered" :header="$t('Fecha de Registro')" style="width: 10%">
+                        <template #body="{ data }">
+                            {{ formatDate(data.dateRegistered) }}
+                        </template>
+                    </Column>
                     <Column field="user.userName" :header="$t('Usuario Registró')" style="width: 10%"></Column>
                     <Column field="recommendationStatus.name" :header="$t('Estado')" style="width: 10%"></Column>
                     <Column :exportable="false" style="width: 10%">
@@ -664,151 +669,38 @@ defineExpose({ save: saveCaseInvestigation });
                 </DataTable>       
             </div>
           </div>
-          
+
+          <!-- BITÁCORA ------------------------------------------------------------- -->
           <div class="card mb-3" style="background-color: var(--surface-card); padding: 1rem;">
-
-            <div class="flexbox-grid container">
-  <DataTable :value="caseinvestigationRecord.binnacles" 
-                    size="small"
-                    scrollable
-                    scrollHeight="calc(100vh - 300px)"
-                    showGridlines 
-                    tableStyle="min-width: 50rem"                     
-                    ref=""                     
-                    paginator 
-                    :rows="5"      
-                    :rowsPerPageOptions="[5, 10, 25, 50]"
-                >
-                    <template #header>
-                        <div class="flex corn">
-                            <h1>{{ $t('Bitácora')}}</h1>
-    <PButton v-tooltip.bottom="$t('COMMON_BUTTONS.new')" @click="openFormDialogBinnacle(null)" icon="pi pi-plus" severity="info" aria-label="User"  />
-                        </div>
-                    </template>
-        
-                    <Column field="id" :header="$t('ID')" style="width: 10%"></Column>
-                    <Column field="name" :header="$t('Descripción')" style="width: 60%"></Column>
-                    <Column field="dateRegistered" :header="$t('Fecha de Registro')" style="width: 10%"></Column>
-                    <Column field="user.userName" :header="$t('Usuario Registró')" style="width: 10%"></Column>
-                    <Column :exportable="false" style="width: 10%">
-                        <template #body="{ data }">
-                            <div class="grid-actions-container">
-                                <PButton @click="($event: Event)=>{ confirmDeleteBinnacle($event, data.id) }" class="grid-button-text" icon="pi pi-trash" v-tooltip.top="$t('COMMON_BUTTONS.delete')" severity="danger" text rounded raised outlined />
-                            </div>
-                        </template>
-                    </Column>                    
-                </DataTable>
-            </div>
+            <BitacoraList :caseinvestigationRecord="caseinvestigationRecord" 
+              :caseinvestigationRepository="caseinvestigationRepository" 
+            />
           </div>
-          
-          <div class="card mb-3" style="background-color: var(--surface-card); padding: 1rem; width: 100%;">
-            <div style="width: 100%;">
-              <div class="grid">
-                <h2>{{ $t("Asignaciones") }}</h2>
+       
+          <!-- ASIGNACIONES ------------------------------------------------------------- -->
+          <div class="card mb-3" style="background-color: var(--surface-card); padding: 1rem;">
+          <AsignacionesList :caseinvestigationRecord="caseinvestigationRecord"
+            :caseinvestigationRepository="caseinvestigationRepository" 
+            @refreshData="loadInitialData"
+          />
+          </div>
+      
 
-                <div class="flexbox-grid container">
-                  <div class="grid">
-                    <DataTable :value="caseinvestigationRecord.caseAssignments" 
-                      size="small"
-                      scrollable
-                      scrollHeight="calc(100vh - 300px)"
-                      showGridlines 
-                      tableStyle="min-width: 50rem"                     
-                      ref=""                     
-                      paginator 
-                      :rows="5"      
-                      :rowsPerPageOptions="[5, 10, 25, 50]"
-                      v-tooltip.right="caseinvestigationRecord.caseAssignments && caseinvestigationRecord.caseAssignments.length === 0 ? 'No hay asignaciones registradas' : null"
-                    >
-                      <template #header>
-                        <div class="flex corn">
-                          <h1>{{ $t('Asignaciones')}}</h1>
-                          <PButton v-tooltip.bottom="$t('COMMON_BUTTONS.new')" @click="openFormDialogAssignment()" icon="pi pi-plus" severity="info" aria-label="User" />
-                        </div>
-                      </template>
-                      <template #empty>
-                        <div class="p-4 text-center">
-                          No hay asignaciones registradas para este caso.
-                        </div>
-                      </template>
-                      <Column field="id" :header="$t('ID')" style="width: 5%"></Column>
-                      <Column :header="$t('Usuario Asignado')" style="width: 25%">
-                        <template #body="{ data }">
-                          {{ data.user && data.user.employee ? data.user.employee.nombre_Completo : 'No disponible' }}
-                        </template>
-                      </Column>
-                      <Column field="observations" :header="$t('Observaciones')" style="width: 40%"></Column>
-                      <Column field="dateRegistered" :header="$t('Fecha de Registro')" style="width: 10%">
-                        <template #body="{ data }">
-                          {{ new Date(data.dateRegistered).toLocaleDateString() }}
-                        </template>
-                      </Column>
-                      <Column field="userNameRegistered" :header="$t('Usuario Registró')" style="width: 10%"></Column>
-                      <Column :exportable="false" style="width: 10%">
-                        <template #body="{ data }">
-                            <div class="grid-actions-container">
-                                <PButton @click="($event: Event)=>{ confirmDeleteAssignment($event, data.id) }" class="grid-button-text" icon="pi pi-trash" v-tooltip.top="$t('COMMON_BUTTONS.delete')" severity="danger" text rounded raised outlined />
-                            </div>
-                        </template>
-                      </Column>
-                    </DataTable>
-                  </div>
-                </div>
-
-
-              </div>
-            </div>
+        <!-- RECUPERACIONES ------------------------------------------------------------- -->
+        <div class="card mb-3" style="background-color: var(--surface-card); padding: 1rem; width: 100%;">
+          <RecuperacionesList :caseinvestigationRecord="caseinvestigationRecord" 
+            :caseinvestigationRepository="caseinvestigationRepository" 
+            @refreshData="loadInitialData"
+          />
           </div>
 
 
-
-          <div class="card mb-3" style="background-color: var(--surface-card); padding: 1rem; width: 100%;">
-            <div style="width: 100%;">
-              <div class="grid">
-                <div class="flexbox-grid container">
-                  <div class="grid">
-                    <DataTable :value="caseinvestigationRecord.recoveryHistories" 
-                      size="small"
-                      scrollable
-                      scrollHeight="calc(100vh - 300px)"
-                      showGridlines 
-                      tableStyle="min-width: 50rem"                     
-                      ref=""                     
-                      paginator 
-                      :rows="5"      
-                      :rowsPerPageOptions="[5, 10, 25, 50]"
-                    >
-                      <template #header>
-                        <div class="flex corn">
-                          <h1>{{ $t('Recuperaciones')}}</h1>
-                          <PButton v-tooltip.bottom="$t('COMMON_BUTTONS.new')" @click="openFormDialogRecovery()" icon="pi pi-plus" severity="info" aria-label="User" />
-                        </div>
-                      </template>
-                      <Column field="id" :header="$t('ID')" style="width: 5%"></Column>
-                      <Column field="dateRecovery" :header="$t('Fecha de Recuperación')" style="width: 15%"></Column>
-                      <Column field="amountRecovery" :header="$t('Monto Recuperado')" style="width: 15%"></Column>
-                      <Column field="observations" :header="$t('Observaciones')" style="width: 30%"></Column>
-                      <Column field="dateRegistered" :header="$t('Fecha de Registro')" style="width: 10%"></Column>
-                      <Column field="userNameRegistered" :header="$t('Usuario Registró')" style="width: 10%"></Column>
-                      <Column :exportable="false" style="width: 10%">
-                        <template #body="{ data }">
-                            <div class="grid-actions-container">
-                                <PButton @click="($event: Event)=>{ confirmDeleteRecovery($event, data.id) }" class="grid-button-text" icon="pi pi-trash" v-tooltip.top="$t('COMMON_BUTTONS.delete')" severity="danger" text rounded raised outlined />
-                            </div>
-                        </template>
-                      </Column>
-                    </DataTable>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
+          <!-- LINKEDS ------------------------------------------------------------- -->
           <div class="card mb-3" style="background-color: var(--surface-card); padding: 1rem;">
 
             <div class="flexbox-grid container">
            
-  <DataTable :value="caseinvestigationRecord.linkeds" 
+              <DataTable :value="caseinvestigationRecord.linkeds" 
                     size="small"
                     scrollable
                     scrollHeight="calc(100vh - 300px)"
@@ -841,11 +733,12 @@ defineExpose({ save: saveCaseInvestigation });
             </div>
           </div>
           
+          <!-- INTERVIEWS ------------------------------------------------------------- -->
           <div class="card mb-3" style="background-color: var(--surface-card); padding: 1rem;">
             
             <div class="flexbox-grid container">
            
-  <DataTable :value="caseinvestigationRecord.interviews" 
+            <DataTable :value="caseinvestigationRecord.interviews" 
                     size="small"
                     scrollable
                     scrollHeight="calc(100vh - 300px)"
@@ -859,7 +752,7 @@ defineExpose({ save: saveCaseInvestigation });
                     <template #header>
                         <div class="flex corn">
                             <h1>{{ $t('Entrevistas')}}</h1>
-    <PButton v-tooltip.bottom="$t('COMMON_BUTTONS.new')" @click="openFormDialogInterview(null)" icon="pi pi-plus" severity="info" aria-label="User"  />
+                            <PButton v-tooltip.bottom="$t('COMMON_BUTTONS.new')" @click="openFormDialogInterview(null)" icon="pi pi-plus" severity="info" aria-label="User"  />
                         </div>
                     </template>
         
@@ -879,6 +772,7 @@ defineExpose({ save: saveCaseInvestigation });
             </div>
           </div>
           
+          <!-- FAULT LINKEDS ------------------------------------------------------------- -->
           <div class="card mb-3" style="background-color: var(--surface-card); padding: 1rem;">
 
             <div class="flexbox-grid container">
@@ -896,14 +790,18 @@ defineExpose({ save: saveCaseInvestigation });
                     <template #header>
                         <div class="flex corn">
                             <h1>{{ $t('Faltas de los Vinculados')}}</h1>
-    <PButton v-tooltip.bottom="$t('COMMON_BUTTONS.new')" @click="openFormDialogFaultLinked(null)" icon="pi pi-plus" severity="info" aria-label="User"  />
+                            <PButton v-tooltip.bottom="$t('COMMON_BUTTONS.new')" @click="openFormDialogFaultLinked(null)" icon="pi pi-plus" severity="info" aria-label="User"  />
                         </div>
                     </template>
       
                     <Column field="id" :header="$t('ID')" style="width: 5%"></Column>
                     <Column field="linked.fullName" :header="$t('Vinculado')" style="width: 20%"></Column>
                     <Column field="fault.name" :header="$t('Falta')" style="width: 60%"></Column>
-                    <Column field="dateRegistered" :header="$t('Fecha de Registro')" style="width: 10%"></Column>
+                    <Column field="dateRegistered" :header="$t('Fecha de Registro')" style="width: 10%">
+                        <template #body="{ data }">
+                            {{ formatDate(data.dateRegistered) }}
+                        </template>
+                    </Column>
                     <Column :exportable="false" style="width: 5%">
                         <template #body="{ data }">
                             <div class="grid-actions-container">
@@ -914,12 +812,13 @@ defineExpose({ save: saveCaseInvestigation });
                 </DataTable>
             </div>
           </div>
-          
+
+          <!-- EVIDENCES ------------------------------------------------------------- -->
           <div class="card mb-3" style="background-color: var(--surface-card); padding: 1rem;">
 
             <div class="flexbox-grid container">
 
-  <DataTable :value="caseinvestigationRecord.evidences" 
+            <DataTable :value="caseinvestigationRecord.evidences" 
                     size="small"
                     scrollable
                     scrollHeight="calc(100vh - 300px)"
@@ -932,8 +831,8 @@ defineExpose({ save: saveCaseInvestigation });
                 >
                     <template #header>
                         <div class="flex corn">
-                            <h1>{{ $t('')}}</h1>
-    <PButton v-tooltip.bottom="$t('COMMON_BUTTONS.new')" @click="openFormDialogEvicence(null)" icon="pi pi-plus" severity="info" aria-label="User"  />
+                            <h1>{{ $t('Evidencias')}}</h1>
+                            <PButton v-tooltip.bottom="$t('COMMON_BUTTONS.new')" @click="openFormDialogEvicence(null)" icon="pi pi-plus" severity="info" aria-label="User"  />
                         </div>
                     </template>
         
@@ -971,23 +870,7 @@ defineExpose({ save: saveCaseInvestigation });
             <PButton @click="saveRec" :label="$t('COMMON_BUTTONS.save')" icon="pi pi-check" autofocus />
         </template>
     </PDialog>
-
-    <PDialog v-model:visible="showDialogBinnacle" :closeOnEscape="false" modal :header="$t('' + (binnacleId === 0 ? $t('COMMON_TITLES.new_record'): $t('COMMON_TITLES.edit_record')) )" :style="{ width: '88vw' }">
-        <div>
-            <BinnacleForm 
-                :binnacleRepository="binnacleRepository" 
-                :cloning="isCloningRecord" 
-                :binId="binnacleId"
-                :caseId="caseinvestigationRecord.id"
-                ref="formRefBinnacle" 
-            />
-        </div>
-        <template #footer>            
-            <PButton @click="showDialogBinnacle = false" severity="warning" :label="$t('COMMON_BUTTONS.cancel')" icon="pi pi-times" />
-            <PButton @click="saveBin" :label="$t('COMMON_BUTTONS.save')" icon="pi pi-check" autofocus />
-        </template>
-    </PDialog>
-
+   
     <PDialog v-model:visible="showDialogAddEvidence" :closeOnEscape="false" modal :header="$t('' + (evidenceId === 0 ? $t('COMMON_TITLES.new_record'): $t('COMMON_TITLES.edit_record')) )" :style="{ width: '88vw' }">
         <div>
             <EvidenceForm 

@@ -16,6 +16,7 @@ using System.Text.Json.Serialization;
 using CaseControl.Domain.Entities;
 using Microsoft.AspNetCore.Http.Features;
 
+// revisado por Carlos Leandy Moreno Reyes, el Varon. 
 public class Program
 {
     public static async Task Main(string[] args)
@@ -98,6 +99,7 @@ public class Program
         builder.Services.AddScoped<IToken, TokenService>();
         builder.Services.AddScoped<IRole, RoleService>();
         builder.Services.AddScoped<IUtil, UtilService>();
+        builder.Services.AddScoped<IDbUtil, UtilService>();
         builder.Services.AddScoped<IFault, FaultService>();
         builder.Services.AddScoped<ILinked, LinkedService>();
         builder.Services.AddScoped<ILinkType, LinkTypeService>();

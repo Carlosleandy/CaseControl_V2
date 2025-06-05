@@ -9,9 +9,9 @@ namespace CaseControl.Api.Controllers
     [ApiController]
     public class UtilController : ControllerBase
     {
-        private readonly IUtil _util;
+        private readonly IDbUtil _util;
 
-        public UtilController(IUtil util)
+        public UtilController(IDbUtil util)
         {
             _util = util;
         }

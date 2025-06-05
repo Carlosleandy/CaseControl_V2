@@ -1,3 +1,4 @@
+// modificado por el Pasante Carlos Leandy Moreno Reyes (Alea: EL Varon)
 using CaseControl.Domain.DTOs;
 using CaseControl.Domain.Entities;
 
@@ -17,7 +18,5 @@ namespace CaseControl.Api.Interfaces
 
         Task<User> GetUserByUserNameAsync(string userName);
         Task<User?> Authenticate(string username, string password);
-        Task<string> encriptarSHA256(string password);
     }
 }
-

@@ -1,38 +1,29 @@
+// Modificado por el Pasante Carlos Leandy Moreno Reyes (Alea: EL Varon)
 using CaseControl.Api.Interfaces;
 using CaseControl.DATA;
 using CaseControl.Domain.DTOs;
 using CaseControl.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
-using static iText.StyledXmlParser.Jsoup.Select.Evaluator;
-using System.Security.Cryptography;
-using System.Text;
-
-
 
 namespace CaseControl.Api.Services
 {
     public class UserService : IUser
     {
         private readonly DataContext _context;
-    
-        public UserService(DataContext context)
+        private readonly IUtil _util;
+
+        public UserService(DataContext context, IUtil util)
         {
             _context = context;
-           
+            _util = util;
         }
-
 
         public async Task<List<User>> GetAllUserAsync(PaginationDTO pagination)
         {
             var queryable = _context.Users
                 .Include(a => a.Cases)
-                  // .Include(a => a.Binnacles)
-                  // .Include(a => a.WorkingGroup)
-                  // .Include(a => a.UserLevel)
-                  // .Include(a => a.Recommendations)
-                  .AsQueryable();
-
+                .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(pagination.Filter))
             {
@@ -46,7 +37,6 @@ namespace CaseControl.Api.Services
 
             return await queryable
                         .OrderBy(x => x.UserName)
-                        //.Paginate(pagination)
                         .ToListAsync();
         }
 
@@ -57,10 +47,6 @@ namespace CaseControl.Api.Services
             if (!string.IsNullOrWhiteSpace(pagination.Filter))
             {
                 queryable = queryable.Where(x => x.UserName!.ToLower().Contains(pagination.Filter.ToLower()) ||
-                //x.Employee!.Nombre_Completo!.ToLower().Contains(pagination.Filter.ToLower()) ||
-                //x.Employee!.Codigo!.ToLower().Contains(pagination.Filter.ToLower()) ||
-                //x.Employee!.Identificacion!.ToLower().Contains(pagination.Filter.ToLower()) ||
-                //x.Employee!.Puesto!.ToLower().Contains(pagination.Filter.ToLower()) ||
                 x.ID.ToString().ToLower().Contains(pagination.Filter.ToLower()));
             }
 
@@ -74,7 +60,6 @@ namespace CaseControl.Api.Services
             var queryable = _context.Users
                   .AsQueryable();
 
-
             if (!string.IsNullOrWhiteSpace(pagination.Filter))
             {
                 queryable = queryable.Where(x => x.UserName!.ToLower().Contains(pagination.Filter.ToLower()) ||
@@ -87,7 +72,6 @@ namespace CaseControl.Api.Services
 
             var users = await queryable
                         .OrderBy(x => x.UserName)
-                        //.Paginate(pagination)
                         .ToListAsync();
 
             if (users != null)
@@ -108,11 +92,6 @@ namespace CaseControl.Api.Services
         public async Task<User> GetUserByIDAsync(int id)
         {
             var user = await _context.Users
-                 // .Include(a => a.Cases)
-                 // .Include(a => a.Binnacles)
-                 // .Include(a => a.WorkingGroup)
-                 // .Include(a => a.UserLevel)
-                 // .Include(a => a.Recommendations)
                  .Include(a => a.Employee)
                  .Where(a => a.IsActive)
                  .OrderBy(a => a.UserName)
@@ -140,7 +119,6 @@ namespace CaseControl.Api.Services
 
         public async Task<User> AddUser(User model)
         {
-
             var modeloUsuario = new User
             {
                 UserName = model.UserName,
@@ -149,17 +127,14 @@ namespace CaseControl.Api.Services
                 WorkingGroupID = model.WorkingGroupID,
                 UserLevelID = model.UserLevelID,
                 IDGerencia = model.IDGerencia,
-                PasswordHash = await encriptarSHA256(model.PasswordHash)
+                PasswordHash = await _util.encriptarSHA256(model.PasswordHash)
             };
 
             await _context.Users.AddAsync(modeloUsuario);
             await _context.SaveChangesAsync();
 
             return modeloUsuario;
-       
         }
-
-
 
         public async Task<User> EditUserAsync(User model)
         {
@@ -184,16 +159,9 @@ namespace CaseControl.Api.Services
             return (_context.Users?.Any(e => e.ID == id)).GetValueOrDefault();
         }
 
-
-
         public async Task<User> GetUserByUserNameAsync(string userName)
         {
             var user = await _context.Users
-                // .Include(a => a.Cases)
-                // .Include(a => a.Binnacles)
-                // .Include(a => a.WorkingGroup)
-                // .Include(a => a.UserLevel)
-                // .Include(a => a.Recommendations)
                 .Where(a => a.UserName == userName)
                  .FirstOrDefaultAsync();
 
@@ -211,75 +179,55 @@ namespace CaseControl.Api.Services
             return user!;
         }
 
-
-        public async Task<string> encriptarSHA256(string texto)
-        {
-            using (SHA256 sha256Hash = SHA256.Create())
-            {
-                // Computar el hash
-                byte[] bytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(texto));
-
-                // Convertir el array de bytes a string
-                StringBuilder builder = new StringBuilder();
-                for (int i = 0; i < bytes.Length; i++)
-                {
-                    builder.Append(bytes[i].ToString("x2"));
-                }
-
-                return builder.ToString();
-            }
-        }
-
         public async Task<User?> Authenticate(string username, string password)
         {
             try
             {
-                // Obtener el usuario por nombre de usuario
+                Console.WriteLine($"Intentando autenticar usuario: {username}");
                 var user = await GetUserByUserNameAsync(username);
-                
-                // Si el usuario no existe o no está activo, retornar null
-                if (user == null || !user.IsActive) 
+                if (user == null)
+                {
+                    Console.WriteLine("Usuario no encontrado.");
                     return null;
-
-                // Verificar si el PasswordHash es nulo
+                }
+                if (!user.IsActive)
+                {
+                    Console.WriteLine("Usuario no está activo.");
+                    return null;
+                }
                 if (string.IsNullOrEmpty(user.PasswordHash))
+                {
+                    Console.WriteLine("PasswordHash es nulo o vacío.");
                     return null;
-                
-                // Comprobar si el hash tiene el formato con salt (salt:hash)
+                }
+
                 if (user.PasswordHash.Contains(":"))
                 {
-                    // Formato nuevo con salt
                     string[] parts = user.PasswordHash.Split(':');
                     if (parts.Length != 2)
+                    {
+                        Console.WriteLine("Formato de PasswordHash con salt inválido.");
                         return null;
-                        
+                    }
                     string salt = parts[0];
                     string storedHash = parts[1];
-                    
-                    // Generar hash con el salt almacenado
-                    string computedHash = await encriptarSHA256(salt + password);
-                    
-                    if (storedHash == computedHash)
-                        return user;
+                    string computedHash = await _util.encriptarSHA256(salt + password);
+                    Console.WriteLine($"ComputedHash: {computedHash}, StoredHash: {storedHash}");
+                    if (storedHash == computedHash) return user;
                 }
                 else
                 {
-                    // Formato antiguo sin salt
-                    string hashedPassword = await encriptarSHA256(password);
-                    
-                    if (user.PasswordHash == hashedPassword)
-                        return user;
+                    string hashedPassword = await _util.encriptarSHA256(password);
+                    Console.WriteLine($"ComputedHash: {hashedPassword}, StoredHash: {user.PasswordHash}");
+                    if (user.PasswordHash == hashedPassword) return user;
                 }
-                
+                Console.WriteLine("Credenciales no coinciden.");
                 return null;
             }
             catch (Exception ex)
             {
-                // Registrar el error
                 Console.WriteLine($"Error en autenticación: {ex.Message}");
                 Console.WriteLine($"StackTrace: {ex.StackTrace}");
-                
-                // Re-lanzar la excepción para que sea manejada por el controlador
                 throw;
             }
         }

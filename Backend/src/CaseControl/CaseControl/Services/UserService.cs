@@ -28,16 +28,25 @@ namespace CaseControl.Api.Services
             if (!string.IsNullOrWhiteSpace(pagination.Filter))
             {
                 queryable = queryable.Where(x => x.UserName!.ToLower().Contains(pagination.Filter.ToLower()) ||
-                x.Employee!.Nombre_Completo!.ToLower().Contains(pagination.Filter.ToLower()) ||
-                x.Employee!.Codigo!.ToLower().Contains(pagination.Filter.ToLower()) ||
-                x.Employee!.Identificacion!.ToLower().Contains(pagination.Filter.ToLower()) ||
-                x.Employee!.Puesto!.ToLower().Contains(pagination.Filter.ToLower()) ||
-                x.ID.ToString().ToLower().Contains(pagination.Filter.ToLower()));
+                    x.ID.ToString().ToLower().Contains(pagination.Filter.ToLower()));
             }
 
-            return await queryable
-                        .OrderBy(x => x.UserName)
-                        .ToListAsync();
+            var users = await queryable
+                .OrderBy(x => x.UserName)
+                .ToListAsync();
+
+            if (users != null)
+            {
+                foreach (var user in users)
+                {
+                    var employee = await _context.VwEmployees
+                        .Where(a => a.Usuario == user.UserName && !string.IsNullOrEmpty(a.Correo) && a.Correo.Contains("@"))
+                        .FirstOrDefaultAsync();
+                    user.Employee = employee;
+                }
+            }
+
+            return users ?? new List<User>();
         }
 
         public async Task<double> GetTotalPagesAsync(PaginationDTO pagination)
@@ -47,7 +56,7 @@ namespace CaseControl.Api.Services
             if (!string.IsNullOrWhiteSpace(pagination.Filter))
             {
                 queryable = queryable.Where(x => x.UserName!.ToLower().Contains(pagination.Filter.ToLower()) ||
-                x.ID.ToString().ToLower().Contains(pagination.Filter.ToLower()));
+                    x.ID.ToString().ToLower().Contains(pagination.Filter.ToLower()));
             }
 
             double count = await queryable.CountAsync();
@@ -58,56 +67,63 @@ namespace CaseControl.Api.Services
         public async Task<List<User>> GetAllUserOnlyAsync(PaginationDTO pagination)
         {
             var queryable = _context.Users
-                  .AsQueryable();
+                .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(pagination.Filter))
             {
                 queryable = queryable.Where(x => x.UserName!.ToLower().Contains(pagination.Filter.ToLower()) ||
-                x.Employee!.Nombre_Completo!.ToLower().Contains(pagination.Filter.ToLower()) ||
-                x.Employee!.Codigo!.ToLower().Contains(pagination.Filter.ToLower()) ||
-                x.Employee!.Identificacion!.ToLower().Contains(pagination.Filter.ToLower()) ||
-                x.Employee!.Puesto!.ToLower().Contains(pagination.Filter.ToLower()) ||
-                x.ID.ToString().ToLower().Contains(pagination.Filter.ToLower()));
+                    x.ID.ToString().ToLower().Contains(pagination.Filter.ToLower()));
             }
 
             var users = await queryable
-                        .OrderBy(x => x.UserName)
-                        .ToListAsync();
+                .OrderBy(x => x.UserName)
+                .ToListAsync();
 
             if (users != null)
             {
-                foreach (var item in users)
+                foreach (var user in users)
                 {
-                    var employee = await _context.vwEmployees
-                   .Where(a => a.Usuario == item.UserName && !string.IsNullOrEmpty(a.Correo) && a.Correo.Contains("@"))
-                    .FirstOrDefaultAsync();
-
-                    item.Employee = employee;
+                    var employee = await _context.VwEmployees
+                        .Where(a => a.Usuario == user.UserName && !string.IsNullOrEmpty(a.Correo) && a.Correo.Contains("@"))
+                        .FirstOrDefaultAsync();
+                    user.Employee = employee;
                 }
             }
 
-            return users!;
+            return users ?? new List<User>();
         }
 
-        public async Task<User> GetUserByIDAsync(int id)
+        public async Task<User?> GetUserByIDAsync(int id)
         {
-            var user = await _context.Users
-                 .Include(a => a.Employee)
-                 .Where(a => a.IsActive)
-                 .OrderBy(a => a.UserName)
-                .Where(a => a.ID == id)
-                 .FirstOrDefaultAsync();
-
-            if (user != null)
+            if (id <= 0)
             {
-                var employee = await _context.vwEmployees
-                   .Where(a => a.Usuario == user.UserName)
-                    .FirstOrDefaultAsync();
-
-                user.Employee = employee;
+                return null;
             }
 
-            return user!;
+            var user = await _context.Users
+                .Where(a => a.IsActive)
+                .OrderBy(a => a.UserName)
+                .Where(a => a.ID == id)
+                .FirstOrDefaultAsync();
+
+            if (user == null)
+            {
+                return null;
+            }
+
+            // Verificar propiedades requeridas
+            if (string.IsNullOrEmpty(user.UserName) || user.ID <= 0)
+            {
+                return null;
+            }
+
+            var employee = await _context.VwEmployees
+                .Where(a => a.Usuario == user.UserName)
+                .FirstOrDefaultAsync();
+
+            user.Employee = employee;
+
+            return user;
         }
 
         public async Task<User> AddUserAsync(User model)
@@ -149,7 +165,12 @@ namespace CaseControl.Api.Services
         public async Task<bool> DeleteUserAsync(int id)
         {
             var user = await _context.Users.FirstOrDefaultAsync(x => x.ID == id);
-            _context.Remove(user!);
+            if (user == null)
+            {
+                return false;
+            }
+
+            _context.Remove(user);
             await _context.SaveChangesAsync();
             return true;
         }
@@ -159,69 +180,78 @@ namespace CaseControl.Api.Services
             return (_context.Users?.Any(e => e.ID == id)).GetValueOrDefault();
         }
 
-        public async Task<User> GetUserByUserNameAsync(string userName)
+        public async Task<User?> GetUserByUserNameAsync(string userName)
         {
-            var user = await _context.Users
-                .Where(a => a.UserName == userName)
-                 .FirstOrDefaultAsync();
-
-            if (user != null)
+            if (string.IsNullOrEmpty(userName))
             {
-                TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
-
-                var employee = await _context.vwEmployees
-                   .Where(a => a.Usuario == user.UserName)
-                    .FirstOrDefaultAsync();
-
-                user.Employee = employee;
+                return null;
             }
 
-            return user!;
+            var user = await _context.Users
+                .Where(a => a.UserName == userName)
+                .FirstOrDefaultAsync();
+
+            if (user == null)
+            {
+                return null;
+            }
+
+            // Verificar propiedades requeridas
+            if (string.IsNullOrEmpty(user.UserName) || user.ID <= 0)
+            {
+                return null;
+            }
+
+            TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
+
+            var employee = await _context.VwEmployees
+                .Where(a => a.Usuario == user.UserName)
+                .FirstOrDefaultAsync();
+
+            user.Employee = employee;
+
+            return user;
         }
 
         public async Task<User?> Authenticate(string username, string password)
         {
             try
             {
-                Console.WriteLine($"Intentando autenticar usuario: {username}");
+                if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
+                {
+                    return null;
+                }
+
                 var user = await GetUserByUserNameAsync(username);
-                if (user == null)
-                {
-                    Console.WriteLine("Usuario no encontrado.");
+
+                if (user == null || !user.IsActive)
                     return null;
-                }
-                if (!user.IsActive)
-                {
-                    Console.WriteLine("Usuario no está activo.");
-                    return null;
-                }
+
                 if (string.IsNullOrEmpty(user.PasswordHash))
-                {
-                    Console.WriteLine("PasswordHash es nulo o vacío.");
                     return null;
-                }
 
                 if (user.PasswordHash.Contains(":"))
                 {
                     string[] parts = user.PasswordHash.Split(':');
                     if (parts.Length != 2)
-                    {
-                        Console.WriteLine("Formato de PasswordHash con salt inválido.");
                         return null;
-                    }
+
                     string salt = parts[0];
                     string storedHash = parts[1];
+
                     string computedHash = await _util.encriptarSHA256(salt + password);
-                    Console.WriteLine($"ComputedHash: {computedHash}, StoredHash: {storedHash}");
-                    if (storedHash == computedHash) return user;
+
+                    if (storedHash == computedHash)
+                        return user;
                 }
                 else
                 {
                     string hashedPassword = await _util.encriptarSHA256(password);
-                    Console.WriteLine($"ComputedHash: {hashedPassword}, StoredHash: {user.PasswordHash}");
-                    if (user.PasswordHash == hashedPassword) return user;
+
+                    if (user.PasswordHash == hashedPassword)
+                        return user;
                 }
-                Console.WriteLine("Credenciales no coinciden.");
+
                 return null;
             }
             catch (Exception ex)

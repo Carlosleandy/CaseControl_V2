@@ -1,10 +1,10 @@
+// revisado por Carlos Leandy Moreno Reyes, el Varon.
 using CaseControl.Api.Helpers;
 using CaseControl.Api.Interfaces;
 using CaseControl.Api.Services;
 using CaseControl.Api.TOKEN.Interfaces;
 using CaseControl.Api.TOKEN.Services;
 using CaseControl.DATA;
-using CaseControl.Domain.DTOs;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -15,74 +15,78 @@ using System.Text;
 using System.Text.Json.Serialization;
 using CaseControl.Domain.Entities;
 using Microsoft.AspNetCore.Http.Features;
+using CaseControl.Api.TOKEN.DTOs; // Mantenemos este para TokenService, pero especificaremos JWTSettings
 
-// revisado por Carlos Leandy Moreno Reyes, el Varon. 
 public class Program
 {
     public static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        // Agregar servicios al contenedor
+        // Configurar servicios al contenedor
         builder.Services.AddCors(options =>
         {
             options.AddPolicy("AllowSpecificOrigin", policy =>
             {
-                policy.SetIsOriginAllowed(origin => true)  // Allow any origin
+                policy.SetIsOriginAllowed(origin => true) // Allow any origin
                       .AllowAnyMethod()                    // Permite cualquier método (GET, POST, etc.)
                       .AllowAnyHeader()                    // Permite cualquier encabezado
-                      .AllowCredentials();                 // Permite enviar credenciales si es necesario (cookies, headers, etc.)
+                      .AllowCredentials();                 // Permite enviar credenciales si es necesario
             });
         });
 
-        // Add services to the container.
+        // Agregar servicios al contenedor
         builder.Services.AddControllers()
-            .AddJsonOptions(options => {
-                // Ignorar referencias cíclicas
+            .AddJsonOptions(options =>
+            {
                 options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-                
-                // Ignorar propiedades nulas para reducir el tamaño de la respuesta JSON
                 options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
-                
-                // Usar camelCase para los nombres de propiedades (estándar de JSON)
                 options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
             });
 
         builder.Services.AddSwaggerGen();
         builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddDbContext<DataContext>(x => x.UseSqlServer("name=DefaultConnectionString"));
+        builder.Services.AddDbContext<DataContext>(x => x.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnectionString")));
         builder.Services.AddTransient<SeedDB>();
         builder.Services.AddHttpContextAccessor();
 
-        // Configuración de JWT
+        // Configurar JWTSettings con depuración
         var jwtSettingsSection = builder.Configuration.GetSection("JWTSettings");
-        builder.Services.Configure<JWTSettings>(jwtSettingsSection);
+        var jwtSettings = jwtSettingsSection.Get<CaseControl.Api.TOKEN.DTOs.JWTSettings>(); // Especificamos el namespace completo
+        if (jwtSettings == null || string.IsNullOrEmpty(jwtSettings.Key))
+        {
+            throw new ArgumentException("Error: No se pudo cargar la configuración JWTSettings desde appsettings.json o la clave está vacía. Verifica el archivo de configuración.");
+        }
+        Console.WriteLine($"JWTSettings cargado correctamente: Key={jwtSettings.Key}, Issuer={jwtSettings.Issuer}, Audience={jwtSettings.Audience}, ExpirationInMinutes={jwtSettings.ExpirationInMinutes}");
+        builder.Services.Configure<CaseControl.Api.TOKEN.DTOs.JWTSettings>(jwtSettingsSection); // Especificamos el namespace completo
 
         // Configurar autenticación JWT
-        var jwtSettings = jwtSettingsSection.Get<JWTSettings>();
-        var key = Encoding.ASCII.GetBytes(jwtSettings.Key);
-
-        builder.Services.AddAuthentication(x =>
-        {
-            x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-            x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-        })
-        .AddJwtBearer(x =>
-        {
-            x.RequireHttpsMetadata = false;
-            x.SaveToken = true;
-            x.TokenValidationParameters = new TokenValidationParameters
+        builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(options =>
             {
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(key),
-                ValidateIssuer = true,
-                ValidateAudience = true,
-                ValidIssuer = jwtSettings.Issuer,
-                ValidAudience = jwtSettings.Audience,
-                ClockSkew = TimeSpan.Zero
-            };
-        });
+                var loadedJwtSettings = jwtSettingsSection.Get<CaseControl.Api.TOKEN.DTOs.JWTSettings>(); // Especificamos el namespace completo
+                if (loadedJwtSettings == null || string.IsNullOrEmpty(loadedJwtSettings.Key))
+                {
+                    throw new ArgumentException("La configuración JWT no está definida o la clave secreta está vacía.");
+                }
 
+                var key = Encoding.UTF8.GetBytes(loadedJwtSettings.Key);
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ValidateIssuer = true,
+                    ValidIssuer = loadedJwtSettings.Issuer,
+                    ValidateAudience = true,
+                    ValidAudience = loadedJwtSettings.Audience,
+                    ValidateLifetime = true,
+                    ClockSkew = TimeSpan.Zero
+                };
+                options.RequireHttpsMetadata = false; // Para desarrollo; cámbialo a true en producción
+                options.SaveToken = true;
+            });
+
+        // Registrar servicios
         builder.Services.AddScoped<ICaseStatus, CaseStatusService>();
         builder.Services.AddScoped<ICaseType, CaseTypeService>();
         builder.Services.AddScoped<IReceptionMedium, ReceptionMediumService>();
@@ -109,33 +113,28 @@ public class Program
         builder.Services.AddScoped<IFaultLinked, FaultLinkedService>();
         builder.Services.AddScoped<IGerencia, GerenciaService>();
 
-        builder.Services.AddResponseCompression(o =>
+        builder.Services.AddResponseCompression(options =>
         {
-            o.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
-               new[] { "application/octet-stream" }
-               );
+            options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
+                new[] { "application/octet-stream" });
         });
 
-        // Configura Kestrel para usar HTTP/2 (esto es generalmente automático si usas HTTPS)
+        // Configurar Kestrel para usar HTTP/2
         builder.WebHost.ConfigureKestrel(options =>
         {
-            // Se puede desactivar HTTP/2 aquí si lo necesitas
             options.ListenAnyIP(7188, listenOptions =>
             {
                 listenOptions.UseHttps();
-                listenOptions.Protocols = HttpProtocols.Http2; // Asegurarse de que HTTP/2 está habilitado
+                listenOptions.Protocols = HttpProtocols.Http2;
             });
         });
 
         var app = builder.Build();
 
-        // Crear usuario administrador por defecto
-       
-
+        // Método para sembrar datos
         void SeedData(WebApplication app)
         {
             IServiceScopeFactory? scopeFactory = app.Services.GetService<IServiceScopeFactory>();
-
             using (IServiceScope scope = scopeFactory!.CreateScope())
             {
                 SeedDB? service = scope.ServiceProvider.GetService<SeedDB>();
@@ -143,43 +142,28 @@ public class Program
             }
         }
 
-        // Configure the HTTP request pipeline.
+        // Configurar el pipeline de HTTP
         if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
         {
             app.UseSwagger();
             app.UseSwaggerUI();
         }
-        //else
-        //{
-        //    app.UseSwagger();
-        //    app.UseSwaggerUI();
-        //    app.Run("http://s460-aud06:5004");
-        //}
 
-        // Configurar la solicitud HTTP.
-        app.UseCors("AllowSpecificOrigin");  // Habilitar CORS usando la política configurada
+        app.UseCors("AllowSpecificOrigin");
 
-        // Permite explícitamente las solicitudes OPTIONS en tu aplicación
         app.Use(async (context, next) =>
         {
             if (context.Request.Method == "OPTIONS")
             {
-                context.Response.StatusCode = 200;  // Responde con código 200 OK para OPTIONS
-                return;  // No continúa con el pipeline, ya que no es necesario seguir procesando OPTIONS
+                context.Response.StatusCode = 200;
+                return;
             }
-
-            await next();  // Continúa con el siguiente middleware si no es una solicitud OPTIONS
+            await next();
         });
-
-        //app.UseResponseCompression();
-
-        //app.UseHttpsRedirection();
 
         app.UseAuthentication();
         app.UseAuthorization();
-
         app.UseRouting();
-
         app.MapControllers();
 
         app.UseExceptionHandler("/Error");

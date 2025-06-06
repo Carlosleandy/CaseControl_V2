@@ -1,4 +1,4 @@
-﻿// modificado por el Pasante Carlos Leandy Moreno Reyes (Alea: EL Varon)
+﻿// Modificado por el Pasante Carlos Leandy Moreno Reyes (Alea: EL Varon)
 using CaseControl.DATA;
 using CaseControl.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -34,7 +34,7 @@ namespace CaseControl.Api.Helpers
         public async Task<vwEmployee> GetEmployeeByCodeIdentAsync(string ident)
         {
             ident = ident.Trim().Replace("-", "");
-            var emp = await _context.vwEmployees
+            var emp = await _context.VwEmployees // Corregido: vwEmployees -> VwEmployees
                 .Where(a => a.Codigo == ident || a.Identificacion == ident)
                 .FirstOrDefaultAsync();
 

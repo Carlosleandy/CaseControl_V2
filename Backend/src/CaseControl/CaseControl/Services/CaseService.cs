@@ -27,29 +27,26 @@ namespace CaseControl.Api.Services
             _faultLinked = faultLinked;
         }
 
-
         public async Task<List<Case>> GetAllCaseAsync(PaginationDTO pagination)
         {
             var queryable = _context.Cases
                 .Include(a => a.CaseStatus!)
                 .Include(a => a.CaseType!)
-                  .AsQueryable();
+                .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(pagination.Filter))
             {
                 queryable = queryable.Where(x => x.CommunicationNumber!.ToLower().Contains(pagination.Filter.ToLower()) ||
-                x.Subject!.ToLower().Contains(pagination.Filter.ToLower()) ||
-                x.CommunicationNumber!.ToLower().Contains(pagination.Filter.ToLower()) ||
-                x.Branch!.ToLower().Contains(pagination.Filter.ToLower()) ||
-                x.CaseStatus!.Name!.ToLower().Contains(pagination.Filter.ToLower()) ||
-                x.CaseType!.Name!.ToLower().Contains(pagination.Filter.ToLower()) ||
-                x.ID.ToString().ToLower().Contains(pagination.Filter.ToLower()));
+                    x.Subject!.ToLower().Contains(pagination.Filter.ToLower()) ||
+                    x.Branch!.ToLower().Contains(pagination.Filter.ToLower()) ||
+                    x.CaseStatus!.Name!.ToLower().Contains(pagination.Filter.ToLower()) ||
+                    x.CaseType!.Name!.ToLower().Contains(pagination.Filter.ToLower()) ||
+                    x.ID.ToString().ToLower().Contains(pagination.Filter.ToLower()));
             }
 
             var result = await queryable
-                        .OrderByDescending(x => x.ID)
-                        //.Paginate(pagination)
-                        .ToListAsync();
+                .OrderByDescending(x => x.ID)
+                .ToListAsync();
 
             foreach (var item in result)
             {
@@ -63,23 +60,21 @@ namespace CaseControl.Api.Services
         public async Task<List<Case>> GetAllCaseOnlyAsync(PaginationDTO pagination)
         {
             var queryable = _context.Cases
-                  .AsQueryable();
+                .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(pagination.Filter))
             {
                 queryable = queryable.Where(x => x.CommunicationNumber!.ToLower().Contains(pagination.Filter.ToLower()) ||
-                x.Subject!.ToLower().Contains(pagination.Filter.ToLower()) ||
-                x.CommunicationNumber!.ToLower().Contains(pagination.Filter.ToLower()) ||
-                x.Branch!.ToLower().Contains(pagination.Filter.ToLower()) ||
-                x.CaseStatus!.Name!.ToLower().Contains(pagination.Filter.ToLower()) ||
-                x.CaseType!.Name!.ToLower().Contains(pagination.Filter.ToLower()) ||
-                x.ID.ToString().ToLower().Contains(pagination.Filter.ToLower()));
+                    x.Subject!.ToLower().Contains(pagination.Filter.ToLower()) ||
+                    x.Branch!.ToLower().Contains(pagination.Filter.ToLower()) ||
+                    x.CaseStatus!.Name!.ToLower().Contains(pagination.Filter.ToLower()) ||
+                    x.CaseType!.Name!.ToLower().Contains(pagination.Filter.ToLower()) ||
+                    x.ID.ToString().ToLower().Contains(pagination.Filter.ToLower()));
             }
 
             var result = await queryable
-                        .OrderBy(x => x.ID)
-                        //.Paginate(pagination)
-                        .ToListAsync();
+                .OrderBy(x => x.ID)
+                .ToListAsync();
 
             foreach (var item in result)
             {
@@ -89,7 +84,6 @@ namespace CaseControl.Api.Services
 
             return result;
         }
-               
 
         public async Task<double> GetTotalPagesAsync(PaginationDTO pagination)
         {
@@ -98,8 +92,8 @@ namespace CaseControl.Api.Services
             if (!string.IsNullOrWhiteSpace(pagination.Filter))
             {
                 queryable = queryable.Where(x => x.CommunicationNumber!.ToLower().Contains(pagination.Filter.ToLower()) ||
-                x.Subject!.ToLower().Contains(pagination.Filter.ToLower()) ||
-                x.ID.ToString().ToLower().Contains(pagination.Filter.ToLower()));
+                    x.Subject!.ToLower().Contains(pagination.Filter.ToLower()) ||
+                    x.ID.ToString().ToLower().Contains(pagination.Filter.ToLower()));
             }
 
             double count = await queryable.CountAsync();
@@ -107,10 +101,10 @@ namespace CaseControl.Api.Services
             return totalPages;
         }
 
-        public async Task<Case> GetCaseByIDAsync(int id)
+        public async Task<Case?> GetCaseByIDAsync(int id)
         {
             var cse = await _context.Cases
-                 .Include(a => a.CaseStatus!)
+                .Include(a => a.CaseStatus!)
                 .Include(a => a.ReceptionMedium!)
                 .Include(a => a.CaseType!)
                 .Include(a => a.User!)
@@ -128,7 +122,7 @@ namespace CaseControl.Api.Services
                 .Include(a => a.FaultLinkeds!)
                     .ThenInclude(a => a.Fault!)
                 .Where(a => a.ID == id)
-                 .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync();
 
             if (cse != null)
             {
@@ -136,7 +130,7 @@ namespace CaseControl.Api.Services
                 cse.AmountRecovered = cs.Sum(a => a.AmountRecovery);
             }
 
-            return cse!;
+            return cse;
         }
 
         public async Task<Case> AddCaseAsync(Case model)
@@ -148,7 +142,6 @@ namespace CaseControl.Api.Services
             ///TODO
             model.UserID = 1;
             model.UserNameRegistered = "jmbelen";
-
 
             _context.Cases.Add(model);
             await _context.SaveChangesAsync();
@@ -172,7 +165,7 @@ namespace CaseControl.Api.Services
             model.Evidences = null;
             model.Interviews = null;
 
-        _context.Cases.Update(model);
+            _context.Cases.Update(model);
             await _context.SaveChangesAsync();
             return model;
         }
@@ -180,7 +173,10 @@ namespace CaseControl.Api.Services
         public async Task<bool> DeleteCaseAsync(int id)
         {
             var status = await _context.Cases.FirstOrDefaultAsync(x => x.ID == id);
-            _context.Remove(status!);
+            if (status == null)
+                return false;
+
+            _context.Remove(status);
             await _context.SaveChangesAsync();
             return true;
         }
@@ -189,9 +185,6 @@ namespace CaseControl.Api.Services
         {
             return (_context.Cases?.Any(e => e.ID == id)).GetValueOrDefault();
         }
-
-
-       
 
         public async Task<CaseStatusChange> AddCaseStatusChangeAsync(CaseStatusChange model)
         {
@@ -202,8 +195,11 @@ namespace CaseControl.Api.Services
             //TODO
             model.userNameRegistered = "jmbelen";
 
-            var cas = _context.Cases.FirstOrDefaultAsync(x => x.ID == model.CaseID).Result;
-            cas!.CaseStatusID = model.CaseStatusID;
+            var cas = await _context.Cases.FirstOrDefaultAsync(x => x.ID == model.CaseID);
+            if (cas != null)
+            {
+                cas.CaseStatusID = model.CaseStatusID;
+            }
 
             _context.CaseStatusChanges.Add(model);
             await _context.SaveChangesAsync();
@@ -219,7 +215,6 @@ namespace CaseControl.Api.Services
             ///TODO
             model.UserID = 1;
 
-
             _context.RecoveryHistories.Add(model);
             await _context.SaveChangesAsync();
             return model;
@@ -234,17 +229,20 @@ namespace CaseControl.Api.Services
                 .Select(g => new { UserName = g.Key, Count = g.Count() })
                 .OrderByDescending(a => a.Count)
                 .ToDictionaryAsync(a => a.UserName!, x => x.Count);
-                
 
             List<CasesUserDTO> casesusers = new List<CasesUserDTO>();
 
             foreach (var item in casesByUser)
             {
-                casesusers.Add(new CasesUserDTO
+                var user = await _user.GetUserByUserNameAsync(item.Key);
+                if (user != null)
                 {
-                    User = await _user.GetUserByUserNameAsync(item.Key),
-                    CasesCount = item.Value
-                });                
+                    casesusers.Add(new CasesUserDTO
+                    {
+                        User = user,
+                        CasesCount = item.Value
+                    });
+                }
             }
 
             var ranking = new RankingCasesUserDTO
@@ -252,10 +250,9 @@ namespace CaseControl.Api.Services
                 CasesTotal = totalCases,
                 CasesUserDTOs = casesusers
             };
-            
+
             return ranking;
         }
-
 
         public async Task<List<RecoveryHistory>> GetCasesAmountRecoveryAsync(int caseID)
         {
@@ -272,7 +269,7 @@ namespace CaseControl.Api.Services
                 item.User = await _user.GetUserByIDAsync(item.UserID);
             }
 
-            return cse!;
+            return cse;
         }
 
         public async Task<List<CaseStatusChange>> GetCasesStatusChangeHistAsync(int caseID)
@@ -284,7 +281,7 @@ namespace CaseControl.Api.Services
                 .OrderBy(a => a.ID)
                 .ToListAsync();
 
-            return cse!;
+            return cse;
         }
 
         public async Task<List<CasesRecoverySummaryDTO>> GetCasesRecoverySummaryAsync()
@@ -308,18 +305,17 @@ namespace CaseControl.Api.Services
                     AmountInvestigated = item.AmountInvestigated,
                     AmountRecovery = item.AmountRecovered,
                     AmountDifference = (item.AmountRecovered - item.AmountInvestigated),
-                    PercentRecovery = ((item.AmountRecovered / item.AmountInvestigated) * 100),
+                    PercentRecovery = (item.AmountInvestigated != 0 ? (item.AmountRecovered / item.AmountInvestigated) * 100 : 0),
                 });
             }
 
-            return result!;
+            return result;
         }
-
 
         public async Task<List<Case>> GetCasesByStatusAsync(int statusID)
         {
             var cases = await _context.Cases
-                 .Include(a => a.CaseStatus!)
+                .Include(a => a.CaseStatus!)
                 .Include(a => a.ReceptionMedium!)
                 .Include(a => a.CaseType!)
                 .Include(a => a.User!)
@@ -327,21 +323,21 @@ namespace CaseControl.Api.Services
                 .Include(a => a.Recommendations!)
                     .ThenInclude(a => a.RecommendationStatus!)
                 .Where(a => a.CaseStatusID == statusID)
-                 .ToListAsync();
+                .ToListAsync();
 
-            if (cases != null)
+            foreach (var cas in cases)
             {
-                foreach (var cas in cases)
+                if (cas.User != null)
                 {
-                    var employee = await _context.vwEmployees
-                  .Where(a => a.Usuario == cas.User!.UserName)
-                   .FirstOrDefaultAsync();
+                    var employee = await _context.VwEmployees
+                        .Where(a => a.Usuario == cas.User.UserName)
+                        .FirstOrDefaultAsync();
 
-                    cas.User!.Employee = employee;
+                    cas.User.Employee = employee;
                 }
             }
 
-            return cases!;
+            return cases;
         }
 
         public async Task<List<CasesByStatusSummaryDTO>> GetCasesByStatusSummaryAsync()
@@ -373,14 +369,13 @@ namespace CaseControl.Api.Services
                 });
             }
 
-            return result!;
+            return result;
         }
-
 
         public async Task<List<Case>> GetCasesByUserNameAsync(string username)
         {
             var cases = await _context.Cases
-                 .Include(a => a.CaseStatus!)
+                .Include(a => a.CaseStatus!)
                 .Include(a => a.ReceptionMedium!)
                 .Include(a => a.CaseType!)
                 .Include(a => a.User!)
@@ -388,14 +383,14 @@ namespace CaseControl.Api.Services
                 .Include(a => a.Recommendations!)
                     .ThenInclude(a => a.RecommendationStatus!)
                 .Where(a => a.User!.UserName!.Trim() == username.Trim())
-                 .ToListAsync();
+                .ToListAsync();
 
             foreach (var item in cases)
             {
                 item.User = await _user.GetUserByIDAsync(item.UserID);
             }
 
-            return cases!;
+            return cases;
         }
 
         public async Task<List<CasesByUserNameSummaryDTO>> GetCasesByUserNameSummaryAsync()
@@ -417,30 +412,42 @@ namespace CaseControl.Api.Services
 
             foreach (var item in cases)
             {
-                result.Add(new CasesByUserNameSummaryDTO
+                var user = await _user.GetUserByIDAsync(item.IDUser);
+                if (user != null)
                 {
-                    User =  await _user.GetUserByIDAsync(item.IDUser),
-                    Count = item.Count,
-                });
+                    result.Add(new CasesByUserNameSummaryDTO
+                    {
+                        User = user,
+                        Count = item.Count,
+                    });
+                }
             }
 
-            return result!;
+            return result;
         }
 
-        public async Task<CasesByLinkedCodeDTO> GetCasesByCodeLinkedAsync(string code)
+        public async Task<CasesByLinkedCodeDTO?> GetCasesByCodeLinkedAsync(string code)
         {
             var cases = await _context.Cases
                 .Include(a => a.CaseType)
-                .Where(a => a.Linkeds!.Any(l => l.Code == code))  
+                .Where(a => a.Linkeds!.Any(l => l.Code == code))
                 .ToListAsync();
+
+            var linked = await _context.Linkeds
+                .Include(a => a.LinkType!)
+                .Where(a => a.Code == code)
+                .FirstOrDefaultAsync();
+
+            if (linked == null)
+                return null;
 
             var result = new CasesByLinkedCodeDTO
             {
                 Cases = cases,
-                Linked = await _context.Linkeds.Include(a => a.LinkType!).Where(a => a.Code == code).FirstOrDefaultAsync(),
+                Linked = linked,
             };
 
-            return result!;
+            return result;
         }
 
         public async Task<byte[]> GeneratePDFRankingCasesByUserAsync()
@@ -454,21 +461,21 @@ namespace CaseControl.Api.Services
                 var document = new Document(pdf, iText.Kernel.Geom.PageSize.LETTER.Rotate());
 
                 document.Add(new Paragraph($"{DateTime.Now.ToString("dd-MM-yyyy")} {DateTime.Now.ToLocalTime().ToString("HH:mm:ss")}")
-                  .SetTextAlignment(iText.Layout.Properties.TextAlignment.RIGHT)
-                  .SetFontSize(8));
+                    .SetTextAlignment(iText.Layout.Properties.TextAlignment.RIGHT)
+                    .SetFontSize(8));
 
                 document.Add(new Paragraph("user")
-                  .SetTextAlignment(iText.Layout.Properties.TextAlignment.RIGHT)
-                  .SetFontSize(8));
+                    .SetTextAlignment(iText.Layout.Properties.TextAlignment.RIGHT)
+                    .SetFontSize(8));
 
                 document.Add(new Paragraph($"Ranking de Casos por Usuario")
-                  .SetTextAlignment(iText.Layout.Properties.TextAlignment.CENTER)
-                  .SetFontSize(16)
-                  .SetBold());
+                    .SetTextAlignment(iText.Layout.Properties.TextAlignment.CENTER)
+                    .SetFontSize(16)
+                    .SetBold());
 
                 var table = new Table(UnitValue.CreatePercentArray(new float[] { 20, 70, 10 }))
-                                        .UseAllAvailableWidth()
-                                        .SetHorizontalAlignment(HorizontalAlignment.CENTER);
+                    .UseAllAvailableWidth()
+                    .SetHorizontalAlignment(HorizontalAlignment.CENTER);
 
                 table.AddHeaderCell(new Cell().Add(new Paragraph("Usuario")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.LEFT).SetBold());
                 table.AddHeaderCell(new Cell().Add(new Paragraph("Nombre")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.LEFT).SetBold());
@@ -476,8 +483,8 @@ namespace CaseControl.Api.Services
 
                 foreach (var item in summary.CasesUserDTOs!)
                 {
-                    table.AddCell(new Cell().Add(new Paragraph(item.User == null ? "" : item.User.UserName))); 
-                    table.AddCell(new Cell().Add(new Paragraph(item.User == null ? "" : item.User!.Employee!.Nombre_Completo)));
+                    table.AddCell(new Cell().Add(new Paragraph(item.User?.UserName ?? "")));
+                    table.AddCell(new Cell().Add(new Paragraph(item.User?.Employee?.Nombre_Completo ?? "")));
                     table.AddCell(new Cell().Add(new Paragraph(item.CasesCount.ToString())).SetTextAlignment(TextAlignment.RIGHT));
                 }
 
@@ -487,9 +494,11 @@ namespace CaseControl.Api.Services
             }
         }
 
-        public async Task<byte[]> GeneratePDFCasesByLinkedCodeAsync(string code)
+        public async Task<byte[]?> GeneratePDFCasesByLinkedCodeAsync(string code)
         {
             var summary = await GetCasesByCodeLinkedAsync(code);
+            if (summary == null || summary.Cases == null || !summary.Cases.Any())
+                return null;
 
             using (var ms = new MemoryStream())
             {
@@ -498,21 +507,21 @@ namespace CaseControl.Api.Services
                 var document = new Document(pdf, iText.Kernel.Geom.PageSize.LETTER.Rotate());
 
                 document.Add(new Paragraph($"{DateTime.Now.ToString("dd-MM-yyyy")} {DateTime.Now.ToLocalTime().ToString("HH:mm:ss")}")
-                  .SetTextAlignment(iText.Layout.Properties.TextAlignment.RIGHT)
-                  .SetFontSize(8));
+                    .SetTextAlignment(iText.Layout.Properties.TextAlignment.RIGHT)
+                    .SetFontSize(8));
 
                 document.Add(new Paragraph("user")
-                  .SetTextAlignment(iText.Layout.Properties.TextAlignment.RIGHT)
-                  .SetFontSize(8));
+                    .SetTextAlignment(iText.Layout.Properties.TextAlignment.RIGHT)
+                    .SetFontSize(8));
 
                 document.Add(new Paragraph($"Historial de Casos del Vinculado - {summary.Linked!.Code} - {summary.Linked!.FullName}")
-                  .SetTextAlignment(iText.Layout.Properties.TextAlignment.CENTER)
-                  .SetFontSize(16)
-                  .SetBold());
+                    .SetTextAlignment(iText.Layout.Properties.TextAlignment.CENTER)
+                    .SetFontSize(16)
+                    .SetBold());
 
                 var table = new Table(UnitValue.CreatePercentArray(new float[] { 10, 25, 10, 5, 10, 10, 10, 10, 10 }))
-                                        .UseAllAvailableWidth()
-                                        .SetHorizontalAlignment(HorizontalAlignment.CENTER);
+                    .UseAllAvailableWidth()
+                    .SetHorizontalAlignment(HorizontalAlignment.CENTER);
 
                 table.AddHeaderCell(new Cell().Add(new Paragraph("Caso")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.LEFT).SetBold());
                 table.AddHeaderCell(new Cell().Add(new Paragraph("Asunto")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.LEFT).SetBold());
@@ -524,13 +533,13 @@ namespace CaseControl.Api.Services
                 table.AddHeaderCell(new Cell().Add(new Paragraph("Monto Recuperado")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.LEFT).SetBold());
                 table.AddHeaderCell(new Cell().Add(new Paragraph("Monto Pérdida")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.LEFT).SetBold());
 
-                foreach (var item in summary.Cases!)
+                foreach (var item in summary.Cases)
                 {
                     table.AddCell(new Cell().Add(new Paragraph(item.ID.ToString())));
-                    table.AddCell(new Cell().Add(new Paragraph(item.Subject == null ? "" : item.Subject)));
-                    table.AddCell(new Cell().Add(new Paragraph(item.CommunicationNumber == null ? "" : item.CommunicationNumber)));
-                    table.AddCell(new Cell().Add(new Paragraph(item.Branch == null ? "" : item.Branch)));
-                    table.AddCell(new Cell().Add(new Paragraph(item.CaseType == null ? "" : item.CaseType!.Name)));
+                    table.AddCell(new Cell().Add(new Paragraph(item.Subject ?? "")));
+                    table.AddCell(new Cell().Add(new Paragraph(item.CommunicationNumber ?? "")));
+                    table.AddCell(new Cell().Add(new Paragraph(item.Branch ?? "")));
+                    table.AddCell(new Cell().Add(new Paragraph(item.CaseType?.Name ?? "")));
                     table.AddCell(new Cell().Add(new Paragraph(item.AmountDetected.ToString("C2"))).SetTextAlignment(TextAlignment.RIGHT));
                     table.AddCell(new Cell().Add(new Paragraph(item.AmountInvestigated.ToString("C2"))).SetTextAlignment(TextAlignment.RIGHT));
                     table.AddCell(new Cell().Add(new Paragraph(item.AmountRecovered.ToString("C2"))).SetTextAlignment(TextAlignment.RIGHT));
@@ -554,33 +563,33 @@ namespace CaseControl.Api.Services
                 var document = new Document(pdf, iText.Kernel.Geom.PageSize.LETTER.Rotate());
 
                 document.Add(new Paragraph($"{DateTime.Now.ToString("dd-MM-yyyy")} {DateTime.Now.ToLocalTime().ToString("HH:mm:ss")}")
-                  .SetTextAlignment(iText.Layout.Properties.TextAlignment.RIGHT)
-                  .SetFontSize(8));
+                    .SetTextAlignment(iText.Layout.Properties.TextAlignment.RIGHT)
+                    .SetFontSize(8));
 
                 document.Add(new Paragraph("user")
-                  .SetTextAlignment(iText.Layout.Properties.TextAlignment.RIGHT)
-                  .SetFontSize(8));
+                    .SetTextAlignment(iText.Layout.Properties.TextAlignment.RIGHT)
+                    .SetFontSize(8));
 
                 document.Add(new Paragraph($"Historial de Cambios de Estado del Caso - {caseid}")
-                  .SetTextAlignment(iText.Layout.Properties.TextAlignment.CENTER)
-                  .SetFontSize(16)
-                  .SetBold());
+                    .SetTextAlignment(iText.Layout.Properties.TextAlignment.CENTER)
+                    .SetFontSize(16)
+                    .SetBold());
 
                 var table = new Table(UnitValue.CreatePercentArray(new float[] { 45, 15, 15, 25 }))
-                                        .UseAllAvailableWidth()
-                                        .SetHorizontalAlignment(HorizontalAlignment.CENTER);
+                    .UseAllAvailableWidth()
+                    .SetHorizontalAlignment(HorizontalAlignment.CENTER);
 
                 table.AddHeaderCell(new Cell().Add(new Paragraph("Asunto Caso")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.LEFT).SetBold());
                 table.AddHeaderCell(new Cell().Add(new Paragraph("Fecha Registro")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.LEFT).SetBold());
                 table.AddHeaderCell(new Cell().Add(new Paragraph("Usuario Registró")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.LEFT).SetBold());
                 table.AddHeaderCell(new Cell().Add(new Paragraph("Estado")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.LEFT).SetBold());
-                
+
                 foreach (var item in summary)
                 {
-                    table.AddCell(new Cell().Add(new Paragraph(item.Case==null?"":item.Case!.Subject)));
+                    table.AddCell(new Cell().Add(new Paragraph(item.Case?.Subject ?? "")));
                     table.AddCell(new Cell().Add(new Paragraph(item.DateRegistered.ToString("dd/MM/yyyy hh:mm:ss"))));
                     table.AddCell(new Cell().Add(new Paragraph(item.userNameRegistered)));
-                    table.AddCell(new Cell().Add(new Paragraph(item.CaseStatus == null ? "" : item.CaseStatus!.Name)));
+                    table.AddCell(new Cell().Add(new Paragraph(item.CaseStatus?.Name ?? "")));
                 }
 
                 document.Add(table);
@@ -600,21 +609,21 @@ namespace CaseControl.Api.Services
                 var document = new Document(pdf, iText.Kernel.Geom.PageSize.LETTER.Rotate());
 
                 document.Add(new Paragraph($"{DateTime.Now.ToString("dd-MM-yyyy")} {DateTime.Now.ToLocalTime().ToString("HH:mm:ss")}")
-                  .SetTextAlignment(iText.Layout.Properties.TextAlignment.RIGHT)
-                  .SetFontSize(8));
+                    .SetTextAlignment(iText.Layout.Properties.TextAlignment.RIGHT)
+                    .SetFontSize(8));
 
                 document.Add(new Paragraph("user")
-                  .SetTextAlignment(iText.Layout.Properties.TextAlignment.RIGHT)
-                  .SetFontSize(8));
+                    .SetTextAlignment(iText.Layout.Properties.TextAlignment.RIGHT)
+                    .SetFontSize(8));
 
                 document.Add(new Paragraph($"Recuperaciones del Caso - {caseid}")
-                  .SetTextAlignment(iText.Layout.Properties.TextAlignment.CENTER)
-                  .SetFontSize(16)
-                  .SetBold());
+                    .SetTextAlignment(iText.Layout.Properties.TextAlignment.CENTER)
+                    .SetFontSize(16)
+                    .SetBold());
 
                 var table = new Table(UnitValue.CreatePercentArray(new float[] { 5, 15, 15, 15, 15, 35 }))
-                                        .UseAllAvailableWidth()
-                                        .SetHorizontalAlignment(HorizontalAlignment.CENTER);
+                    .UseAllAvailableWidth()
+                    .SetHorizontalAlignment(HorizontalAlignment.CENTER);
 
                 table.AddHeaderCell(new Cell().Add(new Paragraph("ID")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.LEFT).SetBold());
                 table.AddHeaderCell(new Cell().Add(new Paragraph("Monto Recuperado")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.RIGHT).SetBold());
@@ -622,15 +631,15 @@ namespace CaseControl.Api.Services
                 table.AddHeaderCell(new Cell().Add(new Paragraph("Fecha Recuperación")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.LEFT).SetBold());
                 table.AddHeaderCell(new Cell().Add(new Paragraph("Fecha Registro")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.LEFT).SetBold());
                 table.AddHeaderCell(new Cell().Add(new Paragraph("Observaciones")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.LEFT).SetBold());
-               
+
                 foreach (var item in summary)
                 {
                     table.AddCell(new Cell().Add(new Paragraph(item.ID.ToString())));
                     table.AddCell(new Cell().Add(new Paragraph(item.AmountRecovery.ToString("C2"))).SetTextAlignment(TextAlignment.RIGHT));
-                    table.AddCell(new Cell().Add(new Paragraph(item.User == null ? "" : item.User!.Employee!.Nombre_Completo)));
+                    table.AddCell(new Cell().Add(new Paragraph(item.User?.Employee?.Nombre_Completo ?? "")));
                     table.AddCell(new Cell().Add(new Paragraph(item.DateRecovery.ToString("dd/MM/yyyy"))));
                     table.AddCell(new Cell().Add(new Paragraph(item.DateRegistered.ToString("dd/MM/yyyy hh:mm:ss"))));
-                    table.AddCell(new Cell().Add(new Paragraph(item.Observations == null ? "" : item.Observations!.ToString())));
+                    table.AddCell(new Cell().Add(new Paragraph(item.Observations ?? "")));
                 }
 
                 document.Add(table);
@@ -650,21 +659,21 @@ namespace CaseControl.Api.Services
                 var document = new Document(pdf, iText.Kernel.Geom.PageSize.LETTER.Rotate());
 
                 document.Add(new Paragraph($"{DateTime.Now.ToString("dd-MM-yyyy")} {DateTime.Now.ToLocalTime().ToString("HH:mm:ss")}")
-                  .SetTextAlignment(iText.Layout.Properties.TextAlignment.RIGHT)
-                  .SetFontSize(8));
+                    .SetTextAlignment(iText.Layout.Properties.TextAlignment.RIGHT)
+                    .SetFontSize(8));
 
                 document.Add(new Paragraph("user")
-                  .SetTextAlignment(iText.Layout.Properties.TextAlignment.RIGHT)
-                  .SetFontSize(8));
+                    .SetTextAlignment(iText.Layout.Properties.TextAlignment.RIGHT)
+                    .SetFontSize(8));
 
                 document.Add(new Paragraph("Resúmen de Recuperaciones por Casos")
-                  .SetTextAlignment(iText.Layout.Properties.TextAlignment.CENTER)
-                  .SetFontSize(16)
-                  .SetBold());
+                    .SetTextAlignment(iText.Layout.Properties.TextAlignment.CENTER)
+                    .SetFontSize(16)
+                    .SetBold());
 
                 var table = new Table(UnitValue.CreatePercentArray(new float[] { 5, 25, 10, 20, 10, 10, 10, 10 }))
-                                        .UseAllAvailableWidth()
-                                        .SetHorizontalAlignment(HorizontalAlignment.CENTER);
+                    .UseAllAvailableWidth()
+                    .SetHorizontalAlignment(HorizontalAlignment.CENTER);
 
                 table.AddHeaderCell(new Cell().Add(new Paragraph("ID")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.LEFT).SetBold());
                 table.AddHeaderCell(new Cell().Add(new Paragraph("Asunto")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.LEFT).SetBold());
@@ -674,7 +683,7 @@ namespace CaseControl.Api.Services
                 table.AddHeaderCell(new Cell().Add(new Paragraph("Monto Recuperado")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.RIGHT).SetBold());
                 table.AddHeaderCell(new Cell().Add(new Paragraph("Diferencia")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.LEFT).SetBold());
                 table.AddHeaderCell(new Cell().Add(new Paragraph("Porciento Recuperado")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.LEFT).SetBold());
- 
+
                 foreach (var item in summary)
                 {
                     table.AddCell(new Cell().Add(new Paragraph(item.Case!.ID.ToString())));
@@ -684,7 +693,7 @@ namespace CaseControl.Api.Services
                     table.AddCell(new Cell().Add(new Paragraph(item.AmountInvestigated.ToString("C2"))).SetTextAlignment(TextAlignment.RIGHT));
                     table.AddCell(new Cell().Add(new Paragraph(item.AmountRecovery.ToString("C2"))).SetTextAlignment(TextAlignment.RIGHT));
                     table.AddCell(new Cell().Add(new Paragraph(item.AmountDifference.ToString("C2"))).SetTextAlignment(TextAlignment.RIGHT));
-                    table.AddCell(new Cell().Add(new Paragraph(item.PercentRecovery.ToString())).SetTextAlignment(TextAlignment.RIGHT));
+                    table.AddCell(new Cell().Add(new Paragraph(item.PercentRecovery.ToString("F2"))).SetTextAlignment(TextAlignment.RIGHT));
                 }
 
                 document.Add(table);
@@ -693,40 +702,36 @@ namespace CaseControl.Api.Services
             }
         }
 
-
         public async Task<byte[]> GeneratePDFCasesByStatusSummaryAsync()
         {
-            var summary=await GetCasesByStatusSummaryAsync();
+            var summary = await GetCasesByStatusSummaryAsync();
 
-            using (var ms=new MemoryStream())
+            using (var ms = new MemoryStream())
             {
                 var writer = new PdfWriter(ms);
                 var pdf = new PdfDocument(writer);
                 var document = new Document(pdf, iText.Kernel.Geom.PageSize.LETTER);
 
-                //var pageSize = new iText.Kernel.Geom.Rectangle(80, 200);
-                //var document = new Document(pdf, pageSize);
-
                 document.Add(new Paragraph($"{DateTime.Now.ToString("dd-MM-yyyy")} {DateTime.Now.ToLocalTime().ToString("HH:mm:ss")}")
-                  .SetTextAlignment(iText.Layout.Properties.TextAlignment.RIGHT)
-                  .SetFontSize(8));
+                    .SetTextAlignment(iText.Layout.Properties.TextAlignment.RIGHT)
+                    .SetFontSize(8));
 
                 document.Add(new Paragraph("user")
-                  .SetTextAlignment(iText.Layout.Properties.TextAlignment.RIGHT)
-                  .SetFontSize(8));
+                    .SetTextAlignment(iText.Layout.Properties.TextAlignment.RIGHT)
+                    .SetFontSize(8));
 
                 document.Add(new Paragraph("Resúmen de Casos por Estados")
-                  .SetTextAlignment(iText.Layout.Properties.TextAlignment.CENTER)
-                  .SetFontSize(18)
-                  .SetBold());
+                    .SetTextAlignment(iText.Layout.Properties.TextAlignment.CENTER)
+                    .SetFontSize(18)
+                    .SetBold());
 
-                var table = new Table(UnitValue.CreatePercentArray(new float[] { 80, 20 })) 
-                                        .UseAllAvailableWidth()
-                                        .SetHorizontalAlignment(HorizontalAlignment.CENTER); 
-                             
+                var table = new Table(UnitValue.CreatePercentArray(new float[] { 80, 20 }))
+                    .UseAllAvailableWidth()
+                    .SetHorizontalAlignment(HorizontalAlignment.CENTER);
+
                 table.AddHeaderCell(new Cell().Add(new Paragraph("Estado")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.LEFT).SetBold());
                 table.AddHeaderCell(new Cell().Add(new Paragraph("Cantidad")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.RIGHT).SetFontColor(ColorConstants.BLACK).SetBold());
-               
+
                 foreach (var item in summary)
                 {
                     table.AddCell(new Cell().Add(new Paragraph(item.Status)));
@@ -739,7 +744,6 @@ namespace CaseControl.Api.Services
             }
         }
 
-
         public async Task<byte[]> GeneratePDFCasesByUserNameSummaryAsync()
         {
             var summary = await GetCasesByUserNameSummaryAsync();
@@ -751,21 +755,21 @@ namespace CaseControl.Api.Services
                 var document = new Document(pdf, iText.Kernel.Geom.PageSize.LETTER);
 
                 document.Add(new Paragraph($"{DateTime.Now.ToString("dd-MM-yyyy")} {DateTime.Now.ToLocalTime().ToString("HH:mm:ss")}")
-                  .SetTextAlignment(iText.Layout.Properties.TextAlignment.RIGHT)
-                  .SetFontSize(8));
+                    .SetTextAlignment(iText.Layout.Properties.TextAlignment.RIGHT)
+                    .SetFontSize(8));
 
                 document.Add(new Paragraph("user")
-                  .SetTextAlignment(iText.Layout.Properties.TextAlignment.RIGHT)
-                  .SetFontSize(8));
+                    .SetTextAlignment(iText.Layout.Properties.TextAlignment.RIGHT)
+                    .SetFontSize(8));
 
                 document.Add(new Paragraph("Resúmen de Casos por Usuario")
-                  .SetTextAlignment(iText.Layout.Properties.TextAlignment.CENTER)
-                  .SetFontSize(16)
-                  .SetBold());
+                    .SetTextAlignment(iText.Layout.Properties.TextAlignment.CENTER)
+                    .SetFontSize(16)
+                    .SetBold());
 
                 var table = new Table(UnitValue.CreatePercentArray(new float[] { 20, 60, 20 }))
-                                        .UseAllAvailableWidth()
-                                        .SetHorizontalAlignment(HorizontalAlignment.CENTER);
+                    .UseAllAvailableWidth()
+                    .SetHorizontalAlignment(HorizontalAlignment.CENTER);
 
                 table.AddHeaderCell(new Cell().Add(new Paragraph("Usuario")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.LEFT).SetBold());
                 table.AddHeaderCell(new Cell().Add(new Paragraph("Nombre")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.LEFT).SetBold());
@@ -773,8 +777,8 @@ namespace CaseControl.Api.Services
 
                 foreach (var item in summary)
                 {
-                    table.AddCell(new Cell().Add(new Paragraph(item.User!.UserName)));
-                    table.AddCell(new Cell().Add(new Paragraph(item.User!.Employee!.Nombre_Completo)));
+                    table.AddCell(new Cell().Add(new Paragraph(item.User?.UserName ?? "")));
+                    table.AddCell(new Cell().Add(new Paragraph(item.User?.Employee?.Nombre_Completo ?? "")));
                     table.AddCell(new Cell().Add(new Paragraph(item.Count.ToString())).SetTextAlignment(TextAlignment.RIGHT));
                 }
 
@@ -784,140 +788,128 @@ namespace CaseControl.Api.Services
             }
         }
 
-
-        public async Task<byte[]> GeneratePDFCasesByStatusAsync(int id)
+        public async Task<byte[]?> GeneratePDFCasesByStatusAsync(int id)
         {
             var summary = await GetCasesByStatusAsync(id);
 
-            if (summary.Count > 0)
+            if (summary == null || !summary.Any())
             {
-                using (var ms = new MemoryStream())
-                {
-                    var writer = new PdfWriter(ms);
-                    var pdf = new PdfDocument(writer);
-                    var document = new Document(pdf, iText.Kernel.Geom.PageSize.LETTER.Rotate());
-
-
-
-                    document.Add(new Paragraph($"{DateTime.Now.ToString("dd-MM-yyyy")} {DateTime.Now.ToLocalTime().ToString("HH:mm:ss")}")
-                      .SetTextAlignment(iText.Layout.Properties.TextAlignment.RIGHT)
-                      .SetFontSize(8));
-
-                    document.Add(new Paragraph("user")
-                      .SetTextAlignment(iText.Layout.Properties.TextAlignment.RIGHT)
-                      .SetFontSize(8));
-
-                    document.Add(new Paragraph($"Listado de Casos en Estado: ({summary.FirstOrDefault()!.CaseStatusID} - {summary.FirstOrDefault()!.CaseStatus!.Name})")
-                      .SetTextAlignment(iText.Layout.Properties.TextAlignment.CENTER)
-                      .SetFontSize(16)
-                      .SetBold());
-
-                    var table = new Table(UnitValue.CreatePercentArray(new float[] { 5, 25, 10, 5, 15, 20, 5, 5, 5, 5 }))
-                                            .UseAllAvailableWidth()
-                                            .SetHorizontalAlignment(HorizontalAlignment.CENTER);
-
-                    table.AddHeaderCell(new Cell().Add(new Paragraph("ID")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.LEFT).SetBold().SetFontSize(10));
-                    table.AddHeaderCell(new Cell().Add(new Paragraph("Asunto")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.LEFT).SetBold().SetFontSize(10));
-                    table.AddHeaderCell(new Cell().Add(new Paragraph("No. Comunicación")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.LEFT).SetBold().SetFontSize(10));
-                    table.AddHeaderCell(new Cell().Add(new Paragraph("Oficina")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.LEFT).SetBold().SetFontSize(10));
-                    table.AddHeaderCell(new Cell().Add(new Paragraph("Tipo Caso")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.LEFT).SetBold().SetFontSize(10));
-                    table.AddHeaderCell(new Cell().Add(new Paragraph("Usuario Asignado")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.LEFT).SetBold().SetFontSize(10));
-                    table.AddHeaderCell(new Cell().Add(new Paragraph("Monto Detectado")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.RIGHT).SetBold().SetFontSize(10));
-                    table.AddHeaderCell(new Cell().Add(new Paragraph("Monto Investigado")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.RIGHT).SetBold().SetFontSize(10));
-                    table.AddHeaderCell(new Cell().Add(new Paragraph("Monto Recuperado")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.RIGHT).SetBold().SetFontSize(10));
-                    table.AddHeaderCell(new Cell().Add(new Paragraph("Monto Pérdida")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.RIGHT).SetBold().SetFontSize(10));
-
-                    foreach (var item in summary)
-                    {
-                        table.AddCell(new Cell().Add(new Paragraph(item!.ID.ToString()).SetFontSize(10)));
-                        table.AddCell(new Cell().Add(new Paragraph(item.Subject == null ? "" : item.Subject).SetFontSize(10)));
-                        table.AddCell(new Cell().Add(new Paragraph(item.CommunicationNumber == null ? "" : item.CommunicationNumber).SetFontSize(10)));
-                        table.AddCell(new Cell().Add(new Paragraph(item.Branch == null ? "" : item.Branch).SetFontSize(10)));
-                        table.AddCell(new Cell().Add(new Paragraph(item.CaseType == null ? "" : item!.CaseType!.Name).SetFontSize(10)));
-                        table.AddCell(new Cell().Add(new Paragraph(item.User == null ? "" : item!.User.Employee!.Nombre_Completo).SetFontSize(10)));
-                        table.AddCell(new Cell().Add(new Paragraph(item.AmountDetected.ToString("C"))).SetTextAlignment(TextAlignment.RIGHT).SetFontSize(10));
-                        table.AddCell(new Cell().Add(new Paragraph(item.AmountInvestigated.ToString("C"))).SetTextAlignment(TextAlignment.RIGHT).SetFontSize(10));
-                        table.AddCell(new Cell().Add(new Paragraph(item.AmountRecovered.ToString("C"))).SetTextAlignment(TextAlignment.RIGHT).SetFontSize(10));
-                        table.AddCell(new Cell().Add(new Paragraph(item.AmountLost.ToString("C"))).SetTextAlignment(TextAlignment.RIGHT).SetFontSize(10));
-                    }
-
-                    document.Add(table);
-                    document.Close();
-                    return ms.ToArray();
-                }
+                return null;
             }
-            else
+
+            using (var ms = new MemoryStream())
             {
-                return null!;
+                var writer = new PdfWriter(ms);
+                var pdf = new PdfDocument(writer);
+                var document = new Document(pdf, iText.Kernel.Geom.PageSize.LETTER.Rotate());
+
+                document.Add(new Paragraph($"{DateTime.Now.ToString("dd-MM-yyyy")} {DateTime.Now.ToLocalTime().ToString("HH:mm:ss")}")
+                    .SetTextAlignment(iText.Layout.Properties.TextAlignment.RIGHT)
+                    .SetFontSize(8));
+
+                document.Add(new Paragraph("user")
+                    .SetTextAlignment(iText.Layout.Properties.TextAlignment.RIGHT)
+                    .SetFontSize(8));
+
+                document.Add(new Paragraph($"Listado de Casos en Estado: ({summary.First().CaseStatusID} - {summary.First().CaseStatus!.Name})")
+                    .SetTextAlignment(iText.Layout.Properties.TextAlignment.CENTER)
+                    .SetFontSize(16)
+                    .SetBold());
+
+                var table = new Table(UnitValue.CreatePercentArray(new float[] { 5, 25, 10, 5, 15, 20, 5, 5, 5, 5 }))
+                    .UseAllAvailableWidth()
+                    .SetHorizontalAlignment(HorizontalAlignment.CENTER);
+
+                table.AddHeaderCell(new Cell().Add(new Paragraph("ID")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.LEFT).SetBold().SetFontSize(10));
+                table.AddHeaderCell(new Cell().Add(new Paragraph("Asunto")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.LEFT).SetBold().SetFontSize(10));
+                table.AddHeaderCell(new Cell().Add(new Paragraph("No. Comunicación")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.LEFT).SetBold().SetFontSize(10));
+                table.AddHeaderCell(new Cell().Add(new Paragraph("Oficina")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.LEFT).SetBold().SetFontSize(10));
+                table.AddHeaderCell(new Cell().Add(new Paragraph("Tipo Caso")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.LEFT).SetBold().SetFontSize(10));
+                table.AddHeaderCell(new Cell().Add(new Paragraph("Usuario Asignado")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.LEFT).SetBold().SetFontSize(10));
+                table.AddHeaderCell(new Cell().Add(new Paragraph("Monto Detectado")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.RIGHT).SetBold().SetFontSize(10));
+                table.AddHeaderCell(new Cell().Add(new Paragraph("Monto Investigado")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.RIGHT).SetBold().SetFontSize(10));
+                table.AddHeaderCell(new Cell().Add(new Paragraph("Monto Recuperado")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.RIGHT).SetBold().SetFontSize(10));
+                table.AddHeaderCell(new Cell().Add(new Paragraph("Monto Pérdida")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.RIGHT).SetBold().SetFontSize(10));
+
+                foreach (var item in summary)
+                {
+                    table.AddCell(new Cell().Add(new Paragraph(item.ID.ToString())).SetFontSize(10));
+                    table.AddCell(new Cell().Add(new Paragraph(item.Subject ?? "")).SetFontSize(10));
+                    table.AddCell(new Cell().Add(new Paragraph(item.CommunicationNumber ?? "")).SetFontSize(10));
+                    table.AddCell(new Cell().Add(new Paragraph(item.Branch ?? "")).SetFontSize(10));
+                    table.AddCell(new Cell().Add(new Paragraph(item.CaseType?.Name ?? "")).SetFontSize(10));
+                    table.AddCell(new Cell().Add(new Paragraph(item.User?.Employee?.Nombre_Completo ?? "")).SetFontSize(10));
+                    table.AddCell(new Cell().Add(new Paragraph(item.AmountDetected.ToString("C"))).SetTextAlignment(TextAlignment.RIGHT).SetFontSize(10));
+                    table.AddCell(new Cell().Add(new Paragraph(item.AmountInvestigated.ToString("C"))).SetTextAlignment(TextAlignment.RIGHT).SetFontSize(10));
+                    table.AddCell(new Cell().Add(new Paragraph(item.AmountRecovered.ToString("C"))).SetTextAlignment(TextAlignment.RIGHT).SetFontSize(10));
+                    table.AddCell(new Cell().Add(new Paragraph(item.AmountLost.ToString("C"))).SetTextAlignment(TextAlignment.RIGHT).SetFontSize(10));
+                }
+
+                document.Add(table);
+                document.Close();
+                return ms.ToArray();
             }
         }
 
-
-        public async Task<byte[]> GeneratePDFCasesByUserNameAsync(string username)
+        public async Task<byte[]?> GeneratePDFCasesByUserNameAsync(string username)
         {
             var cases = await GetCasesByUserNameAsync(username);
 
-            if (cases.Count > 0)
+            if (cases == null || !cases.Any())
             {
-                using (var ms = new MemoryStream())
-                {
-                    var writer = new PdfWriter(ms);
-                    var pdf = new PdfDocument(writer);
-                    var document = new Document(pdf, iText.Kernel.Geom.PageSize.LETTER.Rotate());
-
-
-
-                    document.Add(new Paragraph($"{DateTime.Now.ToString("dd-MM-yyyy")} {DateTime.Now.ToLocalTime().ToString("HH:mm:ss")}")
-                      .SetTextAlignment(iText.Layout.Properties.TextAlignment.RIGHT)
-                      .SetFontSize(8));
-
-                    document.Add(new Paragraph("user")
-                      .SetTextAlignment(iText.Layout.Properties.TextAlignment.RIGHT)
-                      .SetFontSize(8));
-
-                    document.Add(new Paragraph($"Listado de Casos del Empleado: ({cases.FirstOrDefault()!.User!.UserName} - {cases.FirstOrDefault()!.User!.Employee!.Nombre_Completo})")
-                      .SetTextAlignment(iText.Layout.Properties.TextAlignment.CENTER)
-                      .SetFontSize(16)
-                      .SetBold());
-
-                    var table = new Table(UnitValue.CreatePercentArray(new float[] { 5, 25, 10, 5, 15, 10, 10, 10, 10 }))
-                                            .UseAllAvailableWidth()
-                                            .SetHorizontalAlignment(HorizontalAlignment.CENTER);
-
-                    table.AddHeaderCell(new Cell().Add(new Paragraph("ID")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.LEFT).SetBold().SetFontSize(10));
-                    table.AddHeaderCell(new Cell().Add(new Paragraph("Asunto")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.LEFT).SetBold().SetFontSize(10));
-                    table.AddHeaderCell(new Cell().Add(new Paragraph("No. Comunicación")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.LEFT).SetBold().SetFontSize(10));
-                    table.AddHeaderCell(new Cell().Add(new Paragraph("Oficina")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.LEFT).SetBold().SetFontSize(10));
-                    table.AddHeaderCell(new Cell().Add(new Paragraph("Tipo Caso")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.LEFT).SetBold().SetFontSize(10));
-                    table.AddHeaderCell(new Cell().Add(new Paragraph("Monto Detectado")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.RIGHT).SetBold().SetFontSize(10));
-                    table.AddHeaderCell(new Cell().Add(new Paragraph("Monto Investigado")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.RIGHT).SetBold().SetFontSize(10));
-                    table.AddHeaderCell(new Cell().Add(new Paragraph("Monto Recuperado")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.RIGHT).SetBold().SetFontSize(10));
-                    table.AddHeaderCell(new Cell().Add(new Paragraph("Monto Pérdida")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.RIGHT).SetBold().SetFontSize(10));
-
-                    foreach (var item in cases)
-                    {
-                        table.AddCell(new Cell().Add(new Paragraph(item!.ID.ToString()).SetFontSize(10)));
-                        table.AddCell(new Cell().Add(new Paragraph(item.Subject == null ? "" : item.Subject).SetFontSize(10)));
-                        table.AddCell(new Cell().Add(new Paragraph(item.CommunicationNumber == null ? "" : item.CommunicationNumber).SetFontSize(10)));
-                        table.AddCell(new Cell().Add(new Paragraph(item.Branch == null ? "" : item.Branch).SetFontSize(10)));
-                        table.AddCell(new Cell().Add(new Paragraph(item.CaseType == null ? "" : item!.CaseType!.Name).SetFontSize(10)));
-                        table.AddCell(new Cell().Add(new Paragraph(item.AmountDetected.ToString("C"))).SetTextAlignment(TextAlignment.RIGHT).SetFontSize(10));
-                        table.AddCell(new Cell().Add(new Paragraph(item.AmountInvestigated.ToString("C"))).SetTextAlignment(TextAlignment.RIGHT).SetFontSize(10));
-                        table.AddCell(new Cell().Add(new Paragraph(item.AmountRecovered.ToString("C"))).SetTextAlignment(TextAlignment.RIGHT).SetFontSize(10));
-                        table.AddCell(new Cell().Add(new Paragraph(item.AmountLost.ToString("C"))).SetTextAlignment(TextAlignment.RIGHT).SetFontSize(10));
-                    }
-
-                    document.Add(table);
-                    document.Close();
-                    return ms.ToArray();
-                }
+                return null;
             }
-            else
+
+            using (var ms = new MemoryStream())
             {
-                return null!;
+                var writer = new PdfWriter(ms);
+                var pdf = new PdfDocument(writer);
+                var document = new Document(pdf, iText.Kernel.Geom.PageSize.LETTER.Rotate());
+
+                document.Add(new Paragraph($"{DateTime.Now.ToString("dd-MM-yyyy")} {DateTime.Now.ToLocalTime().ToString("HH:mm:ss")}")
+                    .SetTextAlignment(iText.Layout.Properties.TextAlignment.RIGHT)
+                    .SetFontSize(8));
+
+                document.Add(new Paragraph("user")
+                    .SetTextAlignment(iText.Layout.Properties.TextAlignment.RIGHT)
+                    .SetFontSize(8));
+
+                document.Add(new Paragraph($"Listado de Casos del Empleado: ({cases.First().User?.UserName} - {cases.First().User?.Employee?.Nombre_Completo})")
+                    .SetTextAlignment(iText.Layout.Properties.TextAlignment.CENTER)
+                    .SetFontSize(16)
+                    .SetBold());
+
+                var table = new Table(UnitValue.CreatePercentArray(new float[] { 5, 25, 10, 5, 15, 10, 10, 10, 10 }))
+                    .UseAllAvailableWidth()
+                    .SetHorizontalAlignment(HorizontalAlignment.CENTER);
+
+                table.AddHeaderCell(new Cell().Add(new Paragraph("ID")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.LEFT).SetBold().SetFontSize(10));
+                table.AddHeaderCell(new Cell().Add(new Paragraph("Asunto")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.LEFT).SetBold().SetFontSize(10));
+                table.AddHeaderCell(new Cell().Add(new Paragraph("No. Comunicación")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.LEFT).SetBold().SetFontSize(10));
+                table.AddHeaderCell(new Cell().Add(new Paragraph("Oficina")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.LEFT).SetBold().SetFontSize(10));
+                table.AddHeaderCell(new Cell().Add(new Paragraph("Tipo Caso")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.LEFT).SetBold().SetFontSize(10));
+                table.AddHeaderCell(new Cell().Add(new Paragraph("Monto Detectado")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.RIGHT).SetBold().SetFontSize(10));
+                table.AddHeaderCell(new Cell().Add(new Paragraph("Monto Investigado")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.RIGHT).SetBold().SetFontSize(10));
+                table.AddHeaderCell(new Cell().Add(new Paragraph("Monto Recuperado")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.RIGHT).SetBold().SetFontSize(10));
+                table.AddHeaderCell(new Cell().Add(new Paragraph("Monto Pérdida")).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetTextAlignment(TextAlignment.RIGHT).SetBold().SetFontSize(10));
+
+                foreach (var item in cases)
+                {
+                    table.AddCell(new Cell().Add(new Paragraph(item.ID.ToString())).SetFontSize(10));
+                    table.AddCell(new Cell().Add(new Paragraph(item.Subject ?? "")).SetFontSize(10));
+                    table.AddCell(new Cell().Add(new Paragraph(item.CommunicationNumber ?? "")).SetFontSize(10));
+                    table.AddCell(new Cell().Add(new Paragraph(item.Branch ?? "")).SetFontSize(10));
+                    table.AddCell(new Cell().Add(new Paragraph(item.CaseType?.Name ?? "")).SetFontSize(10));
+                    table.AddCell(new Cell().Add(new Paragraph(item.AmountDetected.ToString("C"))).SetTextAlignment(TextAlignment.RIGHT).SetFontSize(10));
+                    table.AddCell(new Cell().Add(new Paragraph(item.AmountInvestigated.ToString("C"))).SetTextAlignment(TextAlignment.RIGHT).SetFontSize(10));
+                    table.AddCell(new Cell().Add(new Paragraph(item.AmountRecovered.ToString("C"))).SetTextAlignment(TextAlignment.RIGHT).SetFontSize(10));
+                    table.AddCell(new Cell().Add(new Paragraph(item.AmountLost.ToString("C"))).SetTextAlignment(TextAlignment.RIGHT).SetFontSize(10));
+                }
+
+                document.Add(table);
+                document.Close();
+                return ms.ToArray();
             }
         }
-
-
     }
 }

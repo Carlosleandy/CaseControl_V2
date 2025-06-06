@@ -7,15 +7,15 @@ namespace CaseControl.DATA
     {
         public DataContext(DbContextOptions<DataContext> options) : base(options)
         {
-
         }
+
         public DbSet<CaseStatus> CaseStatuses { get; set; }
         public DbSet<CaseType> CaseTypes { get; set; }
         public DbSet<ReceptionMedium> ReceptionMedia { get; set; }
         public DbSet<RecommendationStatus> RecommendationStatuses { get; set; }
         public DbSet<Case> Cases { get; set; }
         public DbSet<Recommendation> Recommendations { get; set; }
-        public DbSet<vwEmployee> vwEmployees { get; set; }
+        public DbSet<vwEmployee> VwEmployees { get; set; } // Renombrado para consistencia
         public DbSet<User> Users { get; set; }
         public DbSet<Binnacle> Binnacles { get; set; }
         public DbSet<UserLevel> UserLevels { get; set; }
@@ -41,11 +41,11 @@ namespace CaseControl.DATA
         public DbSet<FaultLinked> FaultLinkeds { get; set; }
         public DbSet<Gerencia> Gerencias { get; set; }
 
-
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // Configuración de índices únicos
             modelBuilder.Entity<CaseStatus>().HasIndex(x => x.Name).IsUnique();
             modelBuilder.Entity<CaseType>().HasIndex(x => x.Name).IsUnique();
             modelBuilder.Entity<ReceptionMedium>().HasIndex(x => x.Name).IsUnique();
@@ -62,80 +62,85 @@ namespace CaseControl.DATA
             modelBuilder.Entity<EvidenceClassification>().HasIndex(x => x.Name).IsUnique();
             modelBuilder.Entity<Gerencia>().HasIndex(x => x.Name).IsUnique();
 
+            // Configuración de vistas
+            modelBuilder.Entity<vwEmployee>()
+                .HasNoKey()
+                .ToView("vwEmployees");
 
+            modelBuilder.Entity<vwOficinas>()
+                .HasNoKey()
+                .ToView("vwOficinas");
 
+            modelBuilder.Entity<vwCostCenter>()
+                .HasNoKey()
+                .ToView("vwCostCenters");
+
+            // Configuración de relaciones
             var userBinnacle = modelBuilder.Entity<User>();
             userBinnacle.HasMany<Binnacle>(p => p.Binnacles)
-            .WithOne(t => t.User)
-            .HasForeignKey(t => t.UserID)
-            .OnDelete(DeleteBehavior.Restrict);
+                .WithOne(t => t.User)
+                .HasForeignKey(t => t.UserID)
+                .OnDelete(DeleteBehavior.Restrict);
 
             var userRecommendation = modelBuilder.Entity<User>();
             userRecommendation.HasMany<Recommendation>(p => p.Recommendations)
-            .WithOne(t => t.User)
-            .HasForeignKey(t => t.UserID)
-            .OnDelete(DeleteBehavior.Restrict);
+                .WithOne(t => t.User)
+                .HasForeignKey(t => t.UserID)
+                .OnDelete(DeleteBehavior.Restrict);
 
             var userAmountRecovery = modelBuilder.Entity<User>();
             userAmountRecovery.HasMany<RecoveryHistory>(p => p.RecoveryHistories)
-            .WithOne(t => t.User)
-            .HasForeignKey(t => t.UserID)
-            .OnDelete(DeleteBehavior.Restrict);
+                .WithOne(t => t.User)
+                .HasForeignKey(t => t.UserID)
+                .OnDelete(DeleteBehavior.Restrict);
 
             var caseassignment = modelBuilder.Entity<User>();
             caseassignment.HasMany<CaseAssignment>(p => p.CaseAssignments)
-            .WithOne(t => t.User)
-            .HasForeignKey(t => t.UserID)
-            .OnDelete(DeleteBehavior.Restrict);
-
+                .WithOne(t => t.User)
+                .HasForeignKey(t => t.UserID)
+                .OnDelete(DeleteBehavior.Restrict);
 
             var casestatuschange = modelBuilder.Entity<Case>();
             casestatuschange.HasMany<CaseStatusChange>(p => p.CaseStatusChanges)
-            .WithOne(t => t.Case)
-            .HasForeignKey(t => t.CaseID)
-            .OnDelete(DeleteBehavior.Restrict);
+                .WithOne(t => t.Case)
+                .HasForeignKey(t => t.CaseID)
+                .OnDelete(DeleteBehavior.Restrict);
 
             var caseslinks = modelBuilder.Entity<Case>();
             caseslinks.HasMany<Linked>(p => p.Linkeds)
-            .WithOne(t => t.Case)
-            .HasForeignKey(t => t.CaseID)
-            .OnDelete(DeleteBehavior.Restrict);
-
+                .WithOne(t => t.Case)
+                .HasForeignKey(t => t.CaseID)
+                .OnDelete(DeleteBehavior.Restrict);
 
             var casestatus = modelBuilder.Entity<CaseStatus>();
             casestatus.HasMany<CaseStatusChange>(p => p.CaseStatusChanges)
-            .WithOne(t => t.CaseStatus)
-            .HasForeignKey(t => t.CaseStatusID)
-            .OnDelete(DeleteBehavior.Restrict);
-
+                .WithOne(t => t.CaseStatus)
+                .HasForeignKey(t => t.CaseStatusID)
+                .OnDelete(DeleteBehavior.Restrict);
 
             var userLevel = modelBuilder.Entity<Role>();
             userLevel.HasMany<UserLevel>(p => p.UserLevels)
-            .WithOne(t => t.Role)
-            .HasForeignKey(t => t.RoleID)
-            .OnDelete(DeleteBehavior.Restrict);
+                .WithOne(t => t.Role)
+                .HasForeignKey(t => t.RoleID)
+                .OnDelete(DeleteBehavior.Restrict);
 
             var accessrole = modelBuilder.Entity<Role>();
             accessrole.HasMany<Access_Role>(p => p.Access_Roles)
-            .WithOne(t => t.Role)
-            .HasForeignKey(t => t.RoleID)
-            .OnDelete(DeleteBehavior.Restrict);
+                .WithOne(t => t.Role)
+                .HasForeignKey(t => t.RoleID)
+                .OnDelete(DeleteBehavior.Restrict);
 
             var access = modelBuilder.Entity<Access>();
             access.HasMany<Access_Role>(p => p.Access_Roles)
-            .WithOne(t => t.Access)
-            .HasForeignKey(t => t.AccessID)
-            .OnDelete(DeleteBehavior.Restrict);
+                .WithOne(t => t.Access)
+                .HasForeignKey(t => t.AccessID)
+                .OnDelete(DeleteBehavior.Restrict);
 
             var gerencia = modelBuilder.Entity<Gerencia>();
             gerencia.HasMany<Case>(p => p.Cases)
-            .WithOne(t => t.Gerencia)
-            .HasForeignKey(t => t.GerenciaID)
-            .OnDelete(DeleteBehavior.Restrict);
-
-
-
+                .WithOne(t => t.Gerencia)
+                .HasForeignKey(t => t.GerenciaID)
+                .OnDelete(DeleteBehavior.Restrict);
         }
-
     }
 }
